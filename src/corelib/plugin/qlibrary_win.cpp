@@ -67,9 +67,10 @@ QStringList QLibraryPrivate::prefixes_sys()
 
 bool QLibraryPrivate::load_sys()
 {
+#ifndef Q_OS_WINRT
     //avoid 'Bad Image' message box
     UINT oldmode = SetErrorMode(SEM_FAILCRITICALERRORS|SEM_NOOPENFILEERRORBOX);
-
+#endif
     // We make the following attempts at locating the library:
     //
     // WinCE
@@ -108,7 +109,13 @@ bool QLibraryPrivate::load_sys()
     }
 
     Q_FOREACH (const QString &attempt, attempts) {
+#ifndef Q_OS_WINRT
         pHnd = LoadLibrary((wchar_t*)QDir::toNativeSeparators(attempt).utf16());
+#else
+        pHnd = LoadPackagedLibrary((wchar_t*)QDir::toNativeSeparators(attempt).utf16(), 0);
+        if (pHnd)
+            qualifiedFileName = attempt;
+#endif
 
         // If we have a handle or the last error is something other than "unable
         // to find the module", then bail out
@@ -116,6 +123,7 @@ bool QLibraryPrivate::load_sys()
             break;
     }
 
+#ifndef Q_OS_WINRT
     SetErrorMode(oldmode);
     if (!pHnd) {
         errorString = QLibrary::tr("Cannot load library %1: %2").arg(fileName).arg(qt_error_string());
@@ -134,6 +142,10 @@ bool QLibraryPrivate::load_sys()
         else
             qualifiedFileName = dir.filePath(moduleFileName);
     }
+#else
+    if (!pHnd)
+        errorString = QLibrary::tr("Cannot load library %1: %2").arg(fileName).arg(qt_error_string());
+#endif
     return (pHnd != 0);
 }
 
