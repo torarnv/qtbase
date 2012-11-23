@@ -13,7 +13,7 @@ mac {
     else: SUBDIRS += cocoa
 }
 
-win32: SUBDIRS += windows
+win32:!winrt: SUBDIRS += windows
 
 qnx {
     SUBDIRS += qnx

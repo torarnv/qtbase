@@ -1102,6 +1102,13 @@ bool qSharedBuild() Q_DECL_NOTHROW
 */
 
 /*!
+    \macro Q_OS_WINRT
+    \relates <QtGlobal>
+
+    Defined on Windows 8 for Windows Store apps.
+*/
+
+/*!
     \macro Q_OS_CYGWIN
     \relates <QtGlobal>
 
