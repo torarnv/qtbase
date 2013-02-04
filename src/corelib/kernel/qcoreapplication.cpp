@@ -107,7 +107,7 @@
 #  include <taskLib.h>
 #endif
 
-#ifdef Q_OS_WINRT
+#ifdef Q_OS_WINPHONE
 #  include <winsock2.h>
 #endif
 
@@ -703,7 +703,7 @@ void QCoreApplication::init()
     Q_ASSERT_X(!self, "QCoreApplication", "there should be only one application object");
     QCoreApplication::self = this;
 
-#ifdef Q_OS_WINRT
+#ifdef Q_OS_WINPHONE
     WSADATA wsaData;
     int err = WSAStartup(MAKEWORD(2, 2), &wsaData);
     if (err != 0) {
@@ -793,7 +793,7 @@ QCoreApplication::~QCoreApplication()
     coreappdata()->app_libpaths = 0;
 #endif
 
-#ifdef Q_OS_WINRT
+#ifdef Q_OS_WINPHONE
     WSACleanup();
 #endif
 }

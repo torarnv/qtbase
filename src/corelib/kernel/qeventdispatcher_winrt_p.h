@@ -3,7 +3,7 @@
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the QtCore module of the Qt Toolkit.
+** This file is part of the qmake spec of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -53,121 +53,10 @@
 // We mean it.
 //
 
-#define FD_SETSIZE 10*1024
-
-#include "QtCore/qabstracteventdispatcher.h"
-#include "QtCore/qlist.h"
-#include "private/qabstracteventdispatcher_p.h"
-#include "private/qpodlist_p.h"
-#include "QtCore/qvarlengtharray.h"
-#include "private/qtimerinfo_unix_p.h"
-
-#include <winsock2.h>
-
-QT_BEGIN_NAMESPACE
-
-struct QSockNot
-{
-    QSocketNotifier *obj;
-    int fd;
-    fd_set *queue;
-};
-
-class QSockNotType
-{
-public:
-    QSockNotType();
-    ~QSockNotType();
-
-    typedef QPodList<QSockNot*, 32> List;
-
-    List list;
-    fd_set select_fds;
-    fd_set enabled_fds;
-    fd_set pending_fds;
-
-};
-
-class QEventDispatcherWinRTPrivate;
-
-class Q_CORE_EXPORT QEventDispatcherWinRT : public QAbstractEventDispatcher
-{
-    Q_OBJECT
-    Q_DECLARE_PRIVATE(QEventDispatcherWinRT)
-
-public:
-    explicit QEventDispatcherWinRT(QObject *parent = 0);
-    ~QEventDispatcherWinRT();
-
-    bool processEvents(QEventLoop::ProcessEventsFlags flags);
-    bool hasPendingEvents();
-
-    void registerSocketNotifier(QSocketNotifier *notifier);
-    void unregisterSocketNotifier(QSocketNotifier *notifier);
-
-    void registerTimer(int timerId, int interval, Qt::TimerType timerType, QObject *object);
-    bool unregisterTimer(int timerId);
-    bool unregisterTimers(QObject *object);
-    QList<TimerInfo> registeredTimers(QObject *object) const;
-
-    bool registerEventNotifier(QWinEventNotifier *notifier)
-    {
-        Q_UNUSED(notifier);
-        return false;
-    }
-
-    void unregisterEventNotifier(QWinEventNotifier *notifier)
-    {
-        Q_UNUSED(notifier);
-    }
-
-    int remainingTime(int timerId);
-
-    void wakeUp();
-    void interrupt();
-    void flush();
-
-protected:
-    QEventDispatcherWinRT(QEventDispatcherWinRTPrivate &dd, QObject *parent = 0);
-
-    void setSocketNotifierPending(QSocketNotifier *notifier);
-
-    int activateTimers();
-    int activateSocketNotifiers();
-
-    virtual int select(int nfds,
-                       fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
-                       timeval *timeout);
-};
-
-class Q_CORE_EXPORT QEventDispatcherWinRTPrivate : public QAbstractEventDispatcherPrivate
-{
-    Q_DECLARE_PUBLIC(QEventDispatcherWinRT)
-
-public:
-    QEventDispatcherWinRTPrivate();
-    ~QEventDispatcherWinRTPrivate();
-
-    int doSelect(QEventLoop::ProcessEventsFlags flags, timeval *timeout);
-    virtual int initThreadWakeUp();
-    virtual int processThreadWakeUp(int nsel);
-
-    int thread_pipe[2];
-
-    // highest fd for all socket notifiers
-    int sn_highest;
-    // 3 socket notifier types - read, write and exception
-    QSockNotType sn_vec[3];
-
-    QTimerInfoList timerList;
-
-    // pending socket notifiers list
-    QSockNotType::List sn_pending_list;
-
-    QAtomicInt wakeUps;
-    bool interrupt;
-};
-
-QT_END_NAMESPACE
+#ifdef Q_OS_WINPHONE
+#  include "qeventdispatcher_winrt_phone_p.h"
+#else
+#  include "qeventdispatcher_winrt_desktop_p.h"
+#endif
 
 #endif // QEVENTDISPATCHER_WINRT_P_H

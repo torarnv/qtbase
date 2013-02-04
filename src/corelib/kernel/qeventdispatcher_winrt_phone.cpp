@@ -39,7 +39,9 @@
 **
 ****************************************************************************/
 
+#ifdef Q_OS_WINPHONE
 #include "qplatformdefs.h"
+#include "qeventdispatcher_winrt_phone_p.h"
 
 #include "qcoreapplication.h"
 #include "qpair.h"
@@ -47,7 +49,6 @@
 #include "qthread.h"
 #include "qelapsedtimer.h"
 
-#include "qeventdispatcher_winrt_p.h"
 #include <private/qthread_p.h>
 #include <private/qcoreapplication_p.h>
 
@@ -769,3 +770,5 @@ void QEventDispatcherWinRT::flush()
 
 
 QT_END_NAMESPACE
+
+#endif // Q_OS_WINPHONE

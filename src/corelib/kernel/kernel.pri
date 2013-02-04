@@ -68,14 +68,39 @@ SOURCES += \
 
 win32 {
         SOURCES += \
-                kernel/qeventdispatcher_win.cpp \
                 kernel/qcoreapplication_win.cpp \
                 kernel/qwineventnotifier.cpp \
                 kernel/qsharedmemory_win.cpp \
                 kernel/qsystemsemaphore_win.cpp
         HEADERS += \
-                kernel/qeventdispatcher_win_p.h \
                 kernel/qwineventnotifier.h
+
+        !winrt {
+            SOURCES += kernel/qeventdispatcher_win.cpp
+
+            HEADERS += kernel/qeventdispatcher_win_p.h
+        } else {
+            HEADERS -= \
+                kernel/qsharedmemory.h \
+                kernel/qsharedmemory_p.h \
+                kernel/qsystemsemaphore.h \
+                kernel/qsystemsemaphore_p.h
+
+            SOURCES -= \
+                kernel/qsharedmemory.cpp \
+                kernel/qsystemsemaphore.cpp
+
+            SOURCES += \
+                kernel/qtimerinfo_unix.cpp \
+                kernel/qeventdispatcher_winrt_desktop.cpp \
+                kernel/qeventdispatcher_winrt_phone.cpp
+
+            HEADERS += \
+                kernel/qtimerinfo_unix_p.h \
+                kernel/qeventdispatcher_winrt_p.h \
+                kernel/qeventdispatcher_winrt_desktop_p.h \
+                kernel/qeventdispatcher_winrt_phone_p.h
+        }
 }
 
 wince*: {
@@ -151,30 +176,4 @@ blackberry {
                 kernel/qeventdispatcher_blackberry.cpp
         HEADERS += \
                 kernel/qeventdispatcher_blackberry_p.h
-}
-
-winrt {
-    HEADERS -= \
-        kernel/qsharedmemory.h \
-        kernel/qsharedmemory_p.h \
-        kernel/qsystemsemaphore.h \
-        kernel/qsystemsemaphore_p.h \
-        kernel/qeventdispatcher_win_p.h
-
-    SOURCES -= \
-        kernel/qsharedmemory.cpp \
-        kernel/qsystemsemaphore.cpp \
-        kernel/qeventdispatcher_win.cpp
-
-    SOURCES += \
-        kernel/qtimerinfo_unix.cpp
-
-    HEADERS += \
-        kernel/qtimerinfo_unix_p.h
-
-    SOURCES += \
-        kernel/qeventdispatcher_winrt.cpp
-
-    HEADERS += \
-        kernel/qeventdispatcher_winrt_p.h
 }

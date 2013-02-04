@@ -39,8 +39,11 @@
 **
 ****************************************************************************/
 
-#ifndef QTIMERINFO_UNIX_P_H
-#define QTIMERINFO_UNIX_P_H
+
+#ifndef QEVENTDISPATCHER_WINRT_DESKTOP_P_H
+#define QEVENTDISPATCHER_WINRT_DESKTOP_P_H
+
+#ifndef Q_OS_WINPHONE
 
 //
 //  W A R N I N G
@@ -53,75 +56,66 @@
 // We mean it.
 //
 
-// #define QTIMERINFO_DEBUG
-
-#if !defined Q_OS_WIN || (defined(Q_OS_WIN) && defined(Q_OS_WINPHONE))
-#include "qabstracteventdispatcher.h"
-
-#ifdef Q_OS_WINPHONE
-#define NOMINMAX
-#include <winsock2.h>
-#else
-#include <sys/time.h> // struct timeval
-#endif
+#include "QtCore/qabstracteventdispatcher.h"
+#include "private/qabstracteventdispatcher_p.h"
 
 QT_BEGIN_NAMESPACE
 
-// internal timer info
-struct QTimerInfo {
-    int id;           // - timer identifier
-    int interval;     // - timer interval in milliseconds
-    Qt::TimerType timerType; // - timer type
-    timespec timeout;  // - when to actually fire
-    QObject *obj;     // - object to receive event
-    QTimerInfo **activateRef; // - ref from activateTimers
+class QEventDispatcherWinRTPrivate;
 
-#ifdef QTIMERINFO_DEBUG
-    timeval expected; // when timer is expected to fire
-    float cumulativeError;
-    uint count;
-#endif
-};
-
-class Q_CORE_EXPORT QTimerInfoList : public QList<QTimerInfo*>
+class Q_CORE_EXPORT QEventDispatcherWinRT : public QAbstractEventDispatcher
 {
-#if ((_POSIX_MONOTONIC_CLOCK-0 <= 0) && !defined(Q_OS_MAC) && !defined(Q_OS_WINRT)) || defined(QT_BOOTSTRAPPED)
-    timespec previousTime;
-    clock_t previousTicks;
-    int ticksPerSecond;
-    int msPerTick;
-
-    bool timeChanged(timespec *delta);
-    void timerRepair(const timespec &);
-#endif
-
-    // state variables used by activateTimers()
-    QTimerInfo *firstTimerInfo;
+    Q_OBJECT
+    Q_DECLARE_PRIVATE(QEventDispatcherWinRT)
 
 public:
-    QTimerInfoList();
+    explicit QEventDispatcherWinRT(QObject *parent = 0);
+    ~QEventDispatcherWinRT();
 
-    timespec currentTime;
-    timespec updateCurrentTime();
+    bool processEvents(QEventLoop::ProcessEventsFlags flags);
+    bool hasPendingEvents();
 
-    // must call updateCurrentTime() first!
-    void repairTimersIfNeeded();
-
-    bool timerWait(timespec &);
-    void timerInsert(QTimerInfo *);
-
-    int timerRemainingTime(int timerId);
+    void registerSocketNotifier(QSocketNotifier *notifier);
+    void unregisterSocketNotifier(QSocketNotifier *notifier);
 
     void registerTimer(int timerId, int interval, Qt::TimerType timerType, QObject *object);
     bool unregisterTimer(int timerId);
     bool unregisterTimers(QObject *object);
-    QList<QAbstractEventDispatcher::TimerInfo> registeredTimers(QObject *object) const;
+    QList<TimerInfo> registeredTimers(QObject *object) const;
 
+    int remainingTime(int timerId);
+
+    bool registerEventNotifier(QWinEventNotifier *notifier);
+    void unregisterEventNotifier(QWinEventNotifier *notifier);
+
+    void wakeUp();
+    void interrupt();
+    void flush();
+
+    void startingUp();
+    void closingDown();
+
+protected:
+    QEventDispatcherWinRT(QEventDispatcherWinRTPrivate &dd, QObject *parent = 0);
+
+
+    bool event(QEvent *);
     int activateTimers();
+    int activateSocketNotifiers();
+
+};
+
+class Q_CORE_EXPORT QEventDispatcherWinRTPrivate : public QAbstractEventDispatcherPrivate
+{
+    Q_DECLARE_PUBLIC(QEventDispatcherWinRT)
+
+public:
+    QEventDispatcherWinRTPrivate();
+    ~QEventDispatcherWinRTPrivate();
 };
 
 QT_END_NAMESPACE
 
-#endif // !Q_OS_WIN || (Q_OS_WIN && Q_OS_WINPHONE)
+#endif // !Q_OS_WINPHONE
 
-#endif // QTIMERINFO_UNIX_P_H
+#endif // QEVENTDISPATCHER_WINRT_DESKTOP_P_H

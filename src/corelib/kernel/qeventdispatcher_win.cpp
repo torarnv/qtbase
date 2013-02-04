@@ -57,8 +57,6 @@
 
 QT_BEGIN_NAMESPACE
 
-#if !defined(Q_OS_WINRT)
-
 HINSTANCE qWinAppInst();
 extern uint qGlobalPostedEventsCount();
 
@@ -1131,103 +1129,5 @@ void QEventDispatcherWin32::sendPostedEvents()
     Q_D(QEventDispatcherWin32);
     QCoreApplicationPrivate::sendPostedEvents(0, 0, d->threadData);
 }
-
-#else
-QEventDispatcherWin32::QEventDispatcherWin32(QObject *parent)
-   : QAbstractEventDispatcher(parent)
-{
-}
-
-QEventDispatcherWin32::~QEventDispatcherWin32()
-{
-}
-
-
-bool QEventDispatcherWin32::processEvents(QEventLoop::ProcessEventsFlags flags)
-{
-   // we are awake, broadcast it
-   emit awake();
-   QCoreApplicationPrivate::sendPostedEvents(0, 0, QThreadData::current());
-
-   return false;
-}
-
-bool QEventDispatcherWin32::hasPendingEvents()
-{
-   return false;
-}
-
-void QEventDispatcherWin32::registerSocketNotifier(QSocketNotifier *notifier)
-{
-   Q_UNUSED(notifier);
-}
-void QEventDispatcherWin32::unregisterSocketNotifier(QSocketNotifier *notifier)
-{
-   Q_UNUSED(notifier);
-}
-
-void QEventDispatcherWin32::registerTimer(int timerId, int interval, QObject *object)
-{
-   Q_UNUSED(timerId);
-   Q_UNUSED(interval);
-   Q_UNUSED(object);
-}
-bool QEventDispatcherWin32::unregisterTimer(int timerId)
-{
-   Q_UNUSED(timerId);
-   return false;
-}
-bool QEventDispatcherWin32::unregisterTimers(QObject *object)
-{
-   Q_UNUSED(object);
-   return false;
-}
-QList<QAbstractEventDispatcher::TimerInfo> QEventDispatcherWin32::registeredTimers(QObject *object) const
-{
-   Q_UNUSED(object);
-   return QList<QAbstractEventDispatcher::TimerInfo>();
-}
-
-bool QEventDispatcherWin32::registerEventNotifier(QWinEventNotifier *notifier)
-{
-   Q_UNUSED(notifier);
-   return false;
-}
-void QEventDispatcherWin32::unregisterEventNotifier(QWinEventNotifier *notifier)
-{
-   Q_UNUSED(notifier);
-}
-void QEventDispatcherWin32::activateEventNotifiers()
-{
-
-}
-
-void QEventDispatcherWin32::wakeUp()
-{
-
-}
-void QEventDispatcherWin32::interrupt()
-{
-
-}
-void QEventDispatcherWin32::flush()
-{
-
-}
-
-void QEventDispatcherWin32::startingUp()
-{
-
-}
-void QEventDispatcherWin32::closingDown()
-{
-
-}
-
-bool QEventDispatcherWin32::event(QEvent *e)
-{
-   return QAbstractEventDispatcher::event(e);
-}
-#endif // !defined(Q_OS_WINRT)
 
 QT_END_NAMESPACE
