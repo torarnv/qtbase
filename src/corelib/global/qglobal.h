@@ -536,8 +536,6 @@ class QDataStream;
 
 #if defined(Q_OS_WINRT)
 #  define QT_NO_PROCESS
-#  define QT_NO_SHAREDMEMORY
-#  define QT_NO_SYSTEMSEMAPHORE
 #endif
 
 inline void qt_noop(void) {}

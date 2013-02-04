@@ -80,16 +80,6 @@ win32 {
 
             HEADERS += kernel/qeventdispatcher_win_p.h
         } else {
-            HEADERS -= \
-                kernel/qsharedmemory.h \
-                kernel/qsharedmemory_p.h \
-                kernel/qsystemsemaphore.h \
-                kernel/qsystemsemaphore_p.h
-
-            SOURCES -= \
-                kernel/qsharedmemory.cpp \
-                kernel/qsystemsemaphore.cpp
-
             SOURCES += \
                 kernel/qtimerinfo_unix.cpp \
                 kernel/qeventdispatcher_winrt_desktop.cpp \

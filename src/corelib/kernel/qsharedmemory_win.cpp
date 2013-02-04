@@ -105,12 +105,14 @@ HANDLE QSharedMemoryPrivate::handle()
             errorString = QSharedMemory::tr("%1: unable to make key").arg(function);
             return 0;
         }
-#ifndef Q_OS_WINCE
-        hand = OpenFileMapping(FILE_MAP_ALL_ACCESS, false, (wchar_t*)nativeKey.utf16());
-#else
+#if defined(Q_OS_WINRT)
+        hand = CreateFileMappingFromApp(INVALID_HANDLE_VALUE, 0, PAGE_READWRITE, 0, (wchar_t*)nativeKey.utf16());
+#elif defined(Q_OS_WINCE)
         // This works for opening a mapping too, but always opens it with read/write access in
         // attach as it seems.
         hand = CreateFileMapping(INVALID_HANDLE_VALUE, 0, PAGE_READWRITE, 0, 0, (wchar_t*)nativeKey.utf16());
+#else
+        hand = OpenFileMapping(FILE_MAP_ALL_ACCESS, false, (wchar_t*)nativeKey.utf16());
 #endif
         if (!hand) {
             setErrorString(function);
@@ -141,7 +143,11 @@ bool QSharedMemoryPrivate::create(int size)
     }
 
     // Create the file mapping.
+#ifdef Q_OS_WINRT
+    hand = CreateFileMappingFromApp(INVALID_HANDLE_VALUE, 0, PAGE_READWRITE, size, (wchar_t*)nativeKey.utf16());
+#else
     hand = CreateFileMapping(INVALID_HANDLE_VALUE, 0, PAGE_READWRITE, 0, size, (wchar_t*)nativeKey.utf16());
+#endif
     setErrorString(function);
 
     // hand is valid when it already exists unlike unix so explicitly check
@@ -155,7 +161,11 @@ bool QSharedMemoryPrivate::attach(QSharedMemory::AccessMode mode)
 {
     // Grab a pointer to the memory block
     int permissions = (mode == QSharedMemory::ReadOnly ? FILE_MAP_READ : FILE_MAP_ALL_ACCESS);
+#ifdef Q_OS_WINRT
+    memory = (void *)MapViewOfFileFromApp(handle(), permissions, 0, 0);
+#else
     memory = (void *)MapViewOfFileEx(handle(), permissions, 0, 0, 0, NULL);
+#endif
     if (0 == memory) {
         setErrorString(QLatin1String("QSharedMemory::attach"));
         cleanHandle();
