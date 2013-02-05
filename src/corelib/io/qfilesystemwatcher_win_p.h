@@ -125,7 +125,6 @@ public:
     };
 private:
     QList<QWindowsFileSystemWatcherEngineThread *> threads;
-
 };
 
 class QWindowsFileSystemWatcherEngineThread : public QThread

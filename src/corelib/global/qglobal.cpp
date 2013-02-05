@@ -1691,7 +1691,7 @@ QSysInfo::MacVersion QSysInfo::macVersion()
 }
 const QSysInfo::MacVersion QSysInfo::MacintoshVersion = QSysInfo::macVersion();
 
-#elif defined(Q_OS_WIN) || defined(Q_OS_CYGWIN) || defined(Q_OS_WINCE)
+#elif defined(Q_OS_WIN) || defined(Q_OS_CYGWIN) || defined(Q_OS_WINCE) || defined(Q_OS_WINRT)
 
 QT_BEGIN_INCLUDE_NAMESPACE
 #include "qt_windows.h"
@@ -1715,6 +1715,9 @@ QSysInfo::WinVersion QSysInfo::windowsVersion()
     static QSysInfo::WinVersion winver;
     if (winver)
         return winver;
+#if defined(Q_OS_WINRT)
+    winver = QSysInfo::WV_WINDOWS8;
+#else
     winver = QSysInfo::WV_NT;
     OSVERSIONINFO osver;
     osver.dwOSVersionInfoSize = sizeof(osver);
@@ -1798,6 +1801,7 @@ QSysInfo::WinVersion QSysInfo::windowsVersion()
         else if (override == "WINDOWS8")
             winver = QSysInfo::WV_WINDOWS8;
     }
+#endif
 #endif
 
     return winver;
@@ -2089,7 +2093,19 @@ QString qt_error_string(int errorCode)
         s = QT_TRANSLATE_NOOP("QIODevice", "No space left on device");
         break;
     default: {
-#ifdef Q_OS_WIN
+#if defined(Q_OS_WIN)
+        // Retrieve the system error message for the last-error code.
+#  if defined(Q_OS_WINRT)
+        __declspec(thread) static wchar_t string[4096];
+        FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                      NULL,
+                      errorCode,
+                      MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                      string,
+                      ARRAYSIZE(string),
+                      NULL);
+        ret = QString::fromWCharArray(string);
+#  else
         wchar_t *string = 0;
         FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER|FORMAT_MESSAGE_FROM_SYSTEM,
                       NULL,
@@ -2100,7 +2116,7 @@ QString qt_error_string(int errorCode)
                       NULL);
         ret = QString::fromWCharArray(string);
         LocalFree((HLOCAL)string);
-
+#  endif
         if (ret.isEmpty() && errorCode == ERROR_MOD_NOT_FOUND)
             ret = QString::fromLatin1("The specified module could not be found.");
 #elif !defined(QT_NO_THREAD) && defined(_POSIX_THREAD_SAFE_FUNCTIONS) && _POSIX_VERSION >= 200112L && !defined(Q_OS_INTEGRITY) && !defined(Q_OS_QNX)
@@ -2117,6 +2133,10 @@ QString qt_error_string(int errorCode)
         ret = QString::fromLatin1(s);
     return ret.trimmed();
 }
+
+#if defined(Q_OS_WINRT)
+static QMap<QByteArray, QByteArray> envvars;
+#endif
 
 // getenv is declared as deprecated in VS2005. This function
 // makes use of the new secure getenv function.
@@ -2135,7 +2155,11 @@ QString qt_error_string(int errorCode)
 */
 QByteArray qgetenv(const char *varName)
 {
-#if defined(_MSC_VER) && _MSC_VER >= 1400
+#if defined(Q_OS_WINRT)
+    if (envvars.contains(varName))
+        return envvars[varName];
+    return QByteArray();
+#elif defined(_MSC_VER) && _MSC_VER >= 1400
     size_t requiredSize = 0;
     QByteArray buffer;
     getenv_s(&requiredSize, 0, 0, varName);
@@ -2168,7 +2192,11 @@ QByteArray qgetenv(const char *varName)
 */
 bool qEnvironmentVariableIsEmpty(const char *varName) Q_DECL_NOEXCEPT
 {
-#if defined(_MSC_VER) && _MSC_VER >= 1400
+#if defined(Q_OS_WINRT)
+    if (envvars.contains(varName))
+        return envvars[varName].isEmpty();
+    return true;
+#elif defined(_MSC_VER) && _MSC_VER >= 1400
     // we provide a buffer that can only hold the empty string, so
     // when the env.var isn't empty, we'll get an ERANGE error (buffer
     // too small):
@@ -2197,7 +2225,11 @@ bool qEnvironmentVariableIsEmpty(const char *varName) Q_DECL_NOEXCEPT
 */
 bool qEnvironmentVariableIsSet(const char *varName) Q_DECL_NOEXCEPT
 {
-#if defined(_MSC_VER) && _MSC_VER >= 1400
+#if defined(Q_OS_WINRT)
+    if (envvars.contains(varName))
+        return !envvars[varName].isEmpty();
+    return false;
+#elif defined(_MSC_VER) && _MSC_VER >= 1400
     size_t requiredSize = 0;
     (void)getenv_s(&requiredSize, 0, 0, varName);
     return requiredSize != 0;
@@ -2226,7 +2258,10 @@ bool qEnvironmentVariableIsSet(const char *varName) Q_DECL_NOEXCEPT
 */
 bool qputenv(const char *varName, const QByteArray& value)
 {
-#if defined(_MSC_VER) && _MSC_VER >= 1400
+#if defined(Q_OS_WINRT)
+    envvars[varName] = value;
+    return true;
+#elif defined(_MSC_VER) && _MSC_VER >= 1400
     return _putenv_s(varName, value.constData()) == 0;
 #elif defined(_POSIX_VERSION) && (_POSIX_VERSION-0) >= 200112L
     // POSIX.1-2001 has setenv

@@ -60,6 +60,7 @@ class QFileIconProvider;
 class Q_WIDGETS_EXPORT QFileSystemModel : public QAbstractItemModel
 {
     Q_OBJECT
+    Q_DECLARE_PRIVATE(QFileSystemModel)
     Q_PROPERTY(bool resolveSymlinks READ resolveSymlinks WRITE setResolveSymlinks)
     Q_PROPERTY(bool readOnly READ isReadOnly WRITE setReadOnly)
     Q_PROPERTY(bool nameFilterDisables READ nameFilterDisables WRITE setNameFilterDisables)
@@ -149,7 +150,6 @@ protected:
     bool event(QEvent *event);
 
 private:
-    Q_DECLARE_PRIVATE(QFileSystemModel)
     Q_DISABLE_COPY(QFileSystemModel)
 
     Q_PRIVATE_SLOT(d_func(), void _q_directoryChanged(const QString &directory, const QStringList &list))

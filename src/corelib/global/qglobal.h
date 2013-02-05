@@ -39,7 +39,6 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-
 #ifndef QGLOBAL_H
 #define QGLOBAL_H
 
@@ -533,6 +532,12 @@ class QDataStream;
 #  define QT_NO_PROCESS          // no exec*, no fork
 #  define QT_NO_SHAREDMEMORY     // only POSIX, no SysV and in the end...
 #  define QT_NO_SYSTEMSEMAPHORE  // not needed at all in a flat address space
+#endif
+
+#if defined(Q_OS_WINRT)
+#  define QT_NO_PROCESS
+#  define QT_NO_SHAREDMEMORY
+#  define QT_NO_SYSTEMSEMAPHORE
 #endif
 
 inline void qt_noop(void) {}

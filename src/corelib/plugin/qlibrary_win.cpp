@@ -125,12 +125,14 @@ bool QLibraryPrivate::load_sys()
 
 #ifndef Q_OS_WINRT
     SetErrorMode(oldmode);
+#endif
     if (!pHnd) {
         errorString = QLibrary::tr("Cannot load library %1: %2").arg(fileName).arg(qt_error_string());
     } else {
         // Query the actual name of the library that was loaded
         errorString.clear();
 
+#if !defined(Q_OS_WINRT)
         wchar_t buffer[MAX_PATH];
         ::GetModuleFileName(pHnd, buffer, MAX_PATH);
 
@@ -141,11 +143,8 @@ bool QLibraryPrivate::load_sys()
             qualifiedFileName = moduleFileName;
         else
             qualifiedFileName = dir.filePath(moduleFileName);
-    }
-#else
-    if (!pHnd)
-        errorString = QLibrary::tr("Cannot load library %1: %2").arg(fileName).arg(qt_error_string());
 #endif
+    }
     return (pHnd != 0);
 }
 

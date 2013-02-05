@@ -1628,7 +1628,7 @@ static bool timeFormatContainsAP(const QString &format)
 
 static QString timeZone()
 {
-#if defined(Q_OS_WINCE)
+#if defined(Q_OS_WINCE) || defined (Q_OS_WINRT)
     TIME_ZONE_INFORMATION info;
     DWORD res = GetTimeZoneInformation(&info);
     if (res == TIME_ZONE_ID_UNKNOWN)

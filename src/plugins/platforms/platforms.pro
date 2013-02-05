@@ -14,6 +14,7 @@ mac {
 }
 
 win32:!winrt: SUBDIRS += windows
+winrt: SUBDIRS += winrt
 
 qnx {
     SUBDIRS += qnx

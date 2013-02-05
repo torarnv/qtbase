@@ -86,6 +86,12 @@ HINSTANCE QSystemLibrary::load(const wchar_t *libraryName, bool onlySystemDirect
 {
     return ::LoadLibrary(libraryName);
 }
+#elif defined(Q_OS_WINRT)
+HINSTANCE QSystemLibrary::load(const wchar_t *libraryName, bool onlySystemDirectory /* = true */)
+{
+    Q_UNUSED(onlySystemDirectory);
+    return ::LoadPackagedLibrary(libraryName, 0);
+}
 #else
 
 #if !defined(QT_BOOTSTRAPPED)
@@ -138,5 +144,7 @@ HINSTANCE QSystemLibrary::load(const wchar_t *libraryName, bool onlySystemDirect
 }
 
 #endif  //Q_OS_WINCE
+
+//#endif // !Q_OS_WINRT
 
 QT_END_NAMESPACE

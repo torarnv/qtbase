@@ -76,6 +76,9 @@
 #  include <crtdbg.h>
 # endif
 #endif
+#ifdef Q_OS_WINRT
+#include <thread> // for std::this_thread::sleep_for
+#endif
 #include <windows.h> // for Sleep
 #endif
 #ifdef Q_OS_UNIX
@@ -2138,7 +2141,7 @@ int QTest::qExec(QObject *testObject, int argc, char **argv)
     try {
 #endif
 
-#if defined(Q_OS_WIN) && !defined(Q_OS_WINCE)
+#if defined(Q_OS_WIN) && !defined(Q_OS_WINCE) && !defined(Q_OS_WINRT)
 # if !defined(Q_CC_MINGW)
     _CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_DEBUG);
 # endif
@@ -2559,7 +2562,9 @@ void QTest::qSleep(int ms)
 {
     QTEST_ASSERT(ms > 0);
 
-#ifdef Q_OS_WIN
+#ifdef Q_OS_WINRT
+    std::this_thread::sleep_for(std::chrono::milliseconds(ms));
+#elif Q_OS_WIN
     Sleep(uint(ms));
 #else
     struct timespec ts = { ms / 1000, (ms % 1000) * 1000 * 1000 };

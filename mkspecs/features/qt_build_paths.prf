@@ -10,6 +10,7 @@
 #
 
 # Find the module's source root dir.
+_QMAKE_CONF_=E:\GitHub\qt5\qtbase\.qmake.conf
 isEmpty(_QMAKE_CONF_): error("Project has no top-level .qmake.conf file.")
 MODULE_PROFILE_DIR = $$dirname(_QMAKE_CONF_)
 isEmpty(MODULE_BASE_DIR): MODULE_BASE_DIR = $$MODULE_PROFILE_DIR

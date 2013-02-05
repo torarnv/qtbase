@@ -103,6 +103,13 @@
 #elif !defined(SAG_COM) && (defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__))
 #  if defined(WINCE) || defined(_WIN32_WCE)
 #    define Q_OS_WINCE
+#  elif WINAPI_FAMILY==WINAPI_FAMILY_DESKTOP_APP
+#    define Q_OS_WIN32
+#  elif WINAPI_FAMILY==WINAPI_FAMILY_PHONE_APP
+#    define Q_OS_WINPHONE
+#    define Q_OS_WINRT
+#  elif WINAPI_FAMILY==WINAPI_FAMILY_APP
+#    define Q_OS_WINRT
 #  else
 #    define Q_OS_WIN32
 #  endif

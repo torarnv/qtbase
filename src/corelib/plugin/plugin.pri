@@ -20,9 +20,7 @@ SOURCES += \
 
 win32 {
 	SOURCES += \
-                plugin/qlibrary_win.cpp
-
-!winrt*: SOURCES += \
+                plugin/qlibrary_win.cpp \
                 plugin/qsystemlibrary.cpp
 }
 

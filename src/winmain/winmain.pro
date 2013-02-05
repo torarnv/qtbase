@@ -17,7 +17,11 @@ win32-msvc*:QMAKE_CXXFLAGS_DEBUG *= -Z7
 win32-g++*: DEFINES += QT_NEEDS_QMAIN
 winrt:QMAKE_CXXFLAGS += -ZW -EHsc
 
-SOURCES = qtmain_win.cpp
+winrt {
+    SOURCES = qtmain_winrt.cpp
+} else {
+    SOURCES = qtmain_win.cpp
+}
 
 load(qt_installs)
 

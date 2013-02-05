@@ -9,6 +9,8 @@ load(qt_module)
 DEFINES += QT_NO_CAST_FROM_ASCII
 PRECOMPILED_HEADER = ../corelib/global/qt_pch.h
 
+winrt:QMAKE_CXXFLAGS -= -ZW
+
 include(cfsocketnotifier/cfsocketnotifier.pri)
 include(cglconvenience/cglconvenience.pri)
 include(dnd/dnd.pri)

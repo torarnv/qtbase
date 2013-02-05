@@ -1018,7 +1018,7 @@ void QConfFileSettingsPrivate::initAccess()
     sync();       // loads the files the first time
 }
 
-#ifdef Q_OS_WIN
+#if defined(Q_OS_WIN) && !defined(Q_OS_WINRT)
 static QString windowsConfigPath(int type)
 {
     QString result;
@@ -1060,7 +1060,7 @@ static QString windowsConfigPath(int type)
 
     return result;
 }
-#endif // Q_OS_WIN
+#endif // defined(Q_OS_WIN) && !defined(Q_OS_WINRT)
 
 static inline int pathHashKey(QSettings::Format format, QSettings::Scope scope)
 {
@@ -1091,11 +1091,15 @@ static void initDefaultPaths(QMutexLocker *locker)
            (The NativeFormat paths are not configurable for the
            Windows registry and the Mac CFPreferences.)
        */
-#ifdef Q_OS_WIN
+#if defined(Q_OS_WIN)
+#if defined(Q_OS_WINRT)
+        // TODO
+#else
         pathHash->insert(pathHashKey(QSettings::IniFormat, QSettings::UserScope),
                          windowsConfigPath(CSIDL_APPDATA) + QDir::separator());
         pathHash->insert(pathHashKey(QSettings::IniFormat, QSettings::SystemScope),
                          windowsConfigPath(CSIDL_COMMON_APPDATA) + QDir::separator());
+#endif
 #else
         QString userPath;
         char *env = getenv("XDG_CONFIG_HOME");

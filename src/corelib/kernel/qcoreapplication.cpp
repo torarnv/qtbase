@@ -84,7 +84,11 @@
 #  endif
 #endif
 #ifdef Q_OS_WIN
+# ifdef Q_OS_WINRT
+#  include "qeventdispatcher_winrt_p.h"
+# else
 #  include "qeventdispatcher_win_p.h"
+# endif
 #endif
 #endif // QT_NO_QOBJECT
 
@@ -101,6 +105,10 @@
 
 #ifdef Q_OS_VXWORKS
 #  include <taskLib.h>
+#endif
+
+#ifdef Q_OS_WINRT
+#  include <winsock2.h>
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -464,6 +472,8 @@ void QCoreApplicationPrivate::createEventDispatcher()
 #  endif
         eventDispatcher = new QEventDispatcherUNIX(q);
 #  endif
+#elif defined(Q_OS_WINRT)
+    eventDispatcher = new QEventDispatcherWinRT(q);
 #elif defined(Q_OS_WIN)
     eventDispatcher = new QEventDispatcherWin32(q);
 #else
@@ -693,6 +703,14 @@ void QCoreApplication::init()
     Q_ASSERT_X(!self, "QCoreApplication", "there should be only one application object");
     QCoreApplication::self = this;
 
+#ifdef Q_OS_WINRT
+    WSADATA wsaData;
+    int err = WSAStartup(MAKEWORD(2, 2), &wsaData);
+    if (err != 0) {
+        qFatal("WSAStartup failed with error: %d", err);
+    }
+#endif
+
 #ifndef QT_NO_QOBJECT
     // use the event dispatcher created by the app programmer (if any)
     if (!QCoreApplicationPrivate::eventDispatcher)
@@ -773,6 +791,10 @@ QCoreApplication::~QCoreApplication()
 #ifndef QT_NO_LIBRARY
     delete coreappdata()->app_libpaths;
     coreappdata()->app_libpaths = 0;
+#endif
+
+#ifdef Q_OS_WINRT
+    WSACleanup();
 #endif
 }
 
@@ -1933,7 +1955,10 @@ QString QCoreApplication::applicationFilePath()
     if (!d->cachedApplicationFilePath.isNull())
         return d->cachedApplicationFilePath;
 
-#if defined(Q_OS_WIN)
+#if defined(Q_OS_WINRT)
+    d->cachedApplicationFilePath = QFileInfo(arguments().front()).filePath();
+    return d->cachedApplicationFilePath;
+#elif defined(Q_OS_WIN)
     d->cachedApplicationFilePath = QFileInfo(qAppFileName()).filePath();
     return d->cachedApplicationFilePath;
 #elif defined(Q_OS_BLACKBERRY)
@@ -2023,7 +2048,7 @@ QString QCoreApplication::applicationFilePath()
 */
 qint64 QCoreApplication::applicationPid()
 {
-#if defined(Q_OS_WIN32) || defined(Q_OS_WINCE)
+#if defined(Q_OS_WIN32) || defined(Q_OS_WINCE) || defined(Q_OS_WINRT)
     return GetCurrentProcessId();
 #elif defined(Q_OS_VXWORKS)
     return (pid_t) taskIdCurrent;
@@ -2074,7 +2099,7 @@ QStringList QCoreApplication::arguments()
     char ** const av = self->d_func()->argv;
     list.reserve(ac);
 
-#ifdef Q_OS_WIN
+#if defined(Q_OS_WIN) && !defined(Q_OS_WINRT)
     // On Windows, it is possible to pass Unicode arguments on
     // the command line. To restore those, we split the command line
     // and filter out arguments that were deleted by derived application

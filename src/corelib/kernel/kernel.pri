@@ -78,7 +78,6 @@ win32 {
                 kernel/qwineventnotifier.h
 }
 
-
 wince*: {
         SOURCES += \
                 kernel/qfunctions_wince.cpp
@@ -154,3 +153,28 @@ blackberry {
                 kernel/qeventdispatcher_blackberry_p.h
 }
 
+winrt {
+    HEADERS -= \
+        kernel/qsharedmemory.h \
+        kernel/qsharedmemory_p.h \
+        kernel/qsystemsemaphore.h \
+        kernel/qsystemsemaphore_p.h \
+        kernel/qeventdispatcher_win_p.h
+
+    SOURCES -= \
+        kernel/qsharedmemory.cpp \
+        kernel/qsystemsemaphore.cpp \
+        kernel/qeventdispatcher_win.cpp
+
+    SOURCES += \
+        kernel/qtimerinfo_unix.cpp
+
+    HEADERS += \
+        kernel/qtimerinfo_unix_p.h
+
+    SOURCES += \
+        kernel/qeventdispatcher_winrt.cpp
+
+    HEADERS += \
+        kernel/qeventdispatcher_winrt_p.h
+}

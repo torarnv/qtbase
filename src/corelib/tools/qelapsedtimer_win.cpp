@@ -53,10 +53,12 @@ static quint64 counterFrequency = 0;
 static void resolveLibs()
 {
     static bool done = false;
-#ifndef Q_OS_WINRT
     if (done)
         return;
 
+#if defined(Q_OS_WINRT)
+    ptrGetTickCount64 = &GetTickCount64;
+#else
     // try to get GetTickCount64 from the system
     HMODULE kernel32 = GetModuleHandleW(L"kernel32");
     if (!kernel32)
@@ -68,6 +70,7 @@ static void resolveLibs()
 #else
     ptrGetTickCount64 = (PtrGetTickCount64)GetProcAddress(kernel32, "GetTickCount64");
 #endif
+#endif
 
     // Retrieve the number of high-resolution performance counter ticks per second
     LARGE_INTEGER frequency;
@@ -76,7 +79,6 @@ static void resolveLibs()
     } else {
         counterFrequency = frequency.QuadPart;
     }
-#endif
     done = true;
 }
 
@@ -109,19 +111,20 @@ static quint64 getTickCount()
         }
     }
 
+#ifdef Q_OS_WINRT
+    Q_ASSERT(ptrGetTickCount64);
+    return ptrGetTickCount64();
+#else
     if (ptrGetTickCount64)
         return ptrGetTickCount64();
 
     static quint32 highdword = 0;
     static quint32 lastval = 0;
-#ifndef Q_OS_WINRT
     quint32 val = GetTickCount();
     if (val < lastval)
         ++highdword;
     lastval = val;
     return val | (quint64(highdword) << 32);
-#else
-    return GetTickCount64();
 #endif
 }
 
@@ -129,6 +132,19 @@ int qt_msectime()
 {
     return ticksToNanoseconds(getTickCount()) / 1000000;
 }
+
+#ifdef Q_OS_WINRT
+#include <winsock2.h>
+
+timeval qt_gettime()
+{
+    timeval tv;
+    qint64 nsecs = ticksToNanoseconds(getTickCount());
+    tv.tv_sec = nsecs / 1000000000ull;
+    tv.tv_usec = (nsecs / 1000) - (tv.tv_sec * 1000000);
+    return tv;
+}
+#endif
 
 QElapsedTimer::ClockType QElapsedTimer::clockType() Q_DECL_NOTHROW
 {

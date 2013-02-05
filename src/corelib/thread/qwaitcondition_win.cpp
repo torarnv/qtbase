@@ -123,6 +123,7 @@ bool QWaitConditionPrivate::wait(QWaitConditionEvent *wce, unsigned long time)
     switch (WaitForSingleObjectEx(wce->event, time, FALSE))
 #endif
     {
+
     default: break;
 
     case WAIT_OBJECT_0:
