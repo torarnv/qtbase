@@ -139,3 +139,9 @@ SUBDIRS += src_plugins src_tools_qdoc
 nacl: SUBDIRS -= src_network src_testlib
 
 android:!android-no-sdk: SUBDIRS += src_android
+
+winrt:!winphone {
+    src_platformsupport.depends -= src_network
+    src_plugins.depends -= src_network
+    SUBDIRS -= src_network
+}
