@@ -135,6 +135,12 @@ int qt_msectime()
 
 #ifdef Q_OS_WINRT
 #include <winsock2.h>
+#ifndef Q_OS_WINPHONE
+struct timeval {
+    long tv_sec;
+    long tv_usec;
+};
+#endif
 
 timeval qt_gettime()
 {
