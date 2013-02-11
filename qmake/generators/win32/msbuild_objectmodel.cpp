@@ -565,6 +565,7 @@ void VCXProjectWriter::write(XmlOutput &xml, VCProjectSingleConfig &tool)
     addFilters(tempProj, xmlFilter, "Resource Files");
     addFilters(tempProj, xmlFilter, "Source Files");
     addFilters(tempProj, xmlFilter, "Translation Files");
+    addFilters(tempProj, xmlFilter, "Deployment Files");
 
     for (int x = 0; x < tempProj.ExtraCompilers.count(); ++x)
         addFilters(tempProj, xmlFilter, tempProj.ExtraCompilers.at(x));
@@ -578,6 +579,7 @@ void VCXProjectWriter::write(XmlOutput &xml, VCProjectSingleConfig &tool)
     outputFilter(tempProj, xml, xmlFilter, "Translation Files");
     outputFilter(tempProj, xml, xmlFilter, "Form Files");
     outputFilter(tempProj, xml, xmlFilter, "Resource Files");
+    outputFilter(tempProj, xml, xmlFilter, "Deployment Files");
 
     for (int x = 0; x < tempProj.ExtraCompilers.count(); ++x) {
         outputFilter(tempProj, xml, xmlFilter, tempProj.ExtraCompilers.at(x));
@@ -787,6 +789,7 @@ void VCXProjectWriter::write(XmlOutput &xml, VCProject &tool)
     addFilters(tool, xmlFilter, "Resource Files");
     addFilters(tool, xmlFilter, "Source Files");
     addFilters(tool, xmlFilter, "Translation Files");
+    addFilters(tool, xmlFilter, "Deployment Files");
 
     for (int x = 0; x < tool.ExtraCompilers.count(); ++x)
         addFilters(tool, xmlFilter, tool.ExtraCompilers.at(x));
@@ -800,6 +803,7 @@ void VCXProjectWriter::write(XmlOutput &xml, VCProject &tool)
     outputFilter(tool, xml, xmlFilter, "Translation Files");
     outputFilter(tool, xml, xmlFilter, "Form Files");
     outputFilter(tool, xml, xmlFilter, "Resource Files");
+    outputFilter(tool, xml, xmlFilter, "Deployment Files");
     for (int x = 0; x < tool.ExtraCompilers.count(); ++x) {
         outputFilter(tool, xml, xmlFilter, tool.ExtraCompilers.at(x));
     }
@@ -1773,6 +1777,8 @@ void VCXProjectWriter::outputFilter(VCProject &project, XmlOutput &xml, XmlOutpu
             filter = singleCfg.FormFiles;
         } else if (filtername == "Resource Files") {
             filter = singleCfg.ResourceFiles;
+        } else if (filtername == "Deployment Files") {
+            filter = singleCfg.DeploymentFiles;
         } else {
             // ExtraCompilers
             filter = project.SingleProjects[i].filterForExtraCompiler(filtername);
@@ -1824,6 +1830,8 @@ void VCXProjectWriter::outputFileConfigs(VCProject &project, XmlOutput &xml, Xml
             filter = singleCfg.FormFiles;
         } else if (filtername.startsWith("Resource Files")) {
             filter = singleCfg.ResourceFiles;
+        } else if (filtername.startsWith("Deployment Files")) {
+            filter = singleCfg.DeploymentFiles;
         } else {
             // ExtraCompilers
             filter = project.SingleProjects[i].filterForExtraCompiler(filtername);
@@ -1954,7 +1962,8 @@ bool VCXProjectWriter::outputFileConfig(VCFilter &filter, XmlOutput &xml, XmlOut
     }
 
     // Actual XML output ----------------------------------
-    if (filter.useCustomBuildTool || filter.useCompilerTool || !inBuild) {
+    if (filter.useCustomBuildTool || filter.useCompilerTool
+            || !inBuild || filtername.startsWith("Deployment Files")) {
 
         if (filter.useCustomBuildTool)
         {
@@ -1969,7 +1978,8 @@ bool VCXProjectWriter::outputFileConfig(VCFilter &filter, XmlOutput &xml, XmlOut
                 xml << tag("CustomBuild")
                     << attrTag("Include",Option::fixPathToLocalOS(filename));
 
-                if ( filtername.startsWith("Form Files") || filtername.startsWith("Generated Files") || filtername.startsWith("Resource Files") )
+                if (filtername.startsWith("Form Files") || filtername.startsWith("Generated Files")
+                        || filtername.startsWith("Resource Files") || filtername.startsWith("Deployment Files"))
                     xml << attrTagS("FileType", "Document");
             }
 
@@ -2042,12 +2052,25 @@ bool VCXProjectWriter::outputFileConfig(VCFilter &filter, XmlOutput &xml, XmlOut
                     xml << tag("ResourceCompile")
                         << attrTag("Include",Option::fixPathToLocalOS(filename));
                 }
+            } else if (filtername.startsWith("Deployment Files")) {
+                xmlFilter << tag("None")
+                          << attrTag("Include",Option::fixPathToLocalOS(filename))
+                          << attrTagS("Filter", filtername);
+
+                xml << tag("None")
+                    << attrTag("Include",Option::fixPathToLocalOS(filename));
             }
         }
 
         const QString condition = generateCondition(*filter.Config);
         if(!inBuild) {
             xml << tag("ExcludedFromBuild")
+                << attrTag("Condition", condition)
+                << valueTag("true");
+        }
+
+        if (filtername.startsWith("Deployment Files") && inBuild) {
+            xml << tag("DeploymentContent")
                 << attrTag("Condition", condition)
                 << valueTag("true");
         }

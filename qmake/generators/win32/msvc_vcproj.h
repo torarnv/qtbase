@@ -116,6 +116,7 @@ protected:
     void initTranslationFiles();
     void initFormFiles();
     void initResourceFiles();
+    void initDeploymentFiles();
     void initLexYaccFiles();
     void initExtraCompilerOutputs();
 

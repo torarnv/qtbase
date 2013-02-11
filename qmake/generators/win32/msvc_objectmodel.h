@@ -984,6 +984,7 @@ public:
     VCFilter                TranslationFiles;
     VCFilter                FormFiles;
     VCFilter                ResourceFiles;
+    VCFilter                DeploymentFiles;
     VCFilterList            ExtraCompilersFiles;
 
     bool                    flat_files;
