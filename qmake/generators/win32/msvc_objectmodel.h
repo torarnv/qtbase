@@ -669,6 +669,10 @@ public:
     QString                 KeyFile;
     QString                 LinkErrorReporting;
 
+    // VS2012
+    triState                GenerateWindowsMetadata;
+    QString                 WindowsMetadataFile;
+
     VCConfiguration*        config;
 };
 
