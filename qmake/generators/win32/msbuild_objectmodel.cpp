@@ -470,11 +470,6 @@ void VCXProjectWriter::write(XmlOutput &xml, VCProjectSingleConfig &tool)
             << attrTag("Condition", condition)
             << valueTag(tool.Configuration.IntermediateDirectory);
     }
-    if (tool.Configuration.CompilerVersion >= NET2012) {
-        xml << tagValue("PlatformToolset",
-                        platformToolSetVersion(tool.Configuration.CompilerVersion,
-                                               tool.Configuration.WinPhone));
-    }
     if ( !tool.Configuration.PrimaryOutput.isEmpty() ) {
         xml<< tag("TargetName")
             << attrTag("Condition", condition)
@@ -686,11 +681,6 @@ void VCXProjectWriter::write(XmlOutput &xml, VCProject &tool)
             xml << tag("IntDir")
                 << attrTag("Condition", condition)
                 << valueTag(config.IntermediateDirectory);
-        }
-        if (config.CompilerVersion >= NET2012) {
-            xml << tagValue("PlatformToolset",
-                            platformToolSetVersion(config.CompilerVersion,
-                                                   config.WinPhone));
         }
         if (!config.PrimaryOutput.isEmpty()) {
             xml << tag("TargetName")
@@ -1695,6 +1685,8 @@ void VCXProjectWriter::write(XmlOutput &xml, const VCConfiguration &tool)
             << attrTagS(_IntermediateDirectory, tool.IntermediateDirectory)
             << attrTagS(_PrimaryOutput, tool.PrimaryOutput)
             << attrTagS(_ProgramDatabase, tool.ProgramDatabase)
+            << attrTagS("PlatformToolset",
+                        platformToolSetVersion(tool.CompilerVersion, tool.WinPhone))
             << attrTagT(_RegisterOutput, tool.RegisterOutput)
             << attrTagS(_UseOfATL, toString(tool.UseOfATL))
             << attrTagS(_UseOfMfc, toString(tool.UseOfMfc))
