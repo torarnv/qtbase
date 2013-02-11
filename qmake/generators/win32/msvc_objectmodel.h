@@ -510,6 +510,7 @@ public:
     callingConventionOption CallingConvention;
     CompileAsOptions        CompileAs;
     compileAsManagedOptions CompileAsManaged;
+    triState                CompileAsWinRT;
     triState                CompileOnly;
     debugOption             DebugInformationFormat;
     triState                DefaultCharIsUnsigned;
