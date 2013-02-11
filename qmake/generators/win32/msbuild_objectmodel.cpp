@@ -810,6 +810,16 @@ void VCXProjectWriter::write(XmlOutput &xml, VCProject &tool)
     }
     outputFilter(tool, xml, xmlFilter, "Root Files");
 
+    if (tool.SingleProjects.at(0).Configuration.WinPhone) {
+        xml << tag("ItemGroup")
+              << tag("Reference")
+                << attrTag("Include", "platform")
+                << attrTagS("IsWinMDFile", "true")
+                << attrTagS("Private", "false")
+              << closetag()
+            << closetag();
+    }
+
     xml << import("Project", "$(VCTargetsPath)\\Microsoft.Cpp.targets");
 
     if (tool.SingleProjects.at(0).Configuration.WinPhone)
@@ -1714,6 +1724,8 @@ void VCXProjectWriter::addFilters(VCProject &project, XmlOutput &xmlFilter, cons
             filter = singleCfg.FormFiles;
         } else if (filtername == "Resource Files") {
             filter = singleCfg.ResourceFiles;
+        } else if (filtername == "Deployment Files") {
+            filter = singleCfg.DeploymentFiles;
         } else {
             // ExtraCompilers
             filter = project.SingleProjects[i].filterForExtraCompiler(filtername);
