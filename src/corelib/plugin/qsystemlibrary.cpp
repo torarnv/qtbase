@@ -145,6 +145,4 @@ HINSTANCE QSystemLibrary::load(const wchar_t *libraryName, bool onlySystemDirect
 
 #endif  //Q_OS_WINCE
 
-//#endif // !Q_OS_WINRT
-
 QT_END_NAMESPACE
