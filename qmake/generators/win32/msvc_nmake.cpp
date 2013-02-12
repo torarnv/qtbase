@@ -108,6 +108,19 @@ NmakeMakefileGenerator::writeMakefile(QTextStream &t)
                             qPrintable(variables["QMAKESPEC"].first().toQString()));
                     return false;
                 }
+            } else if (project->isActiveConfig("winphone")) {
+                QString vcInstallDir = QString::fromLatin1(qgetenv("VCInstallDir"));
+                if (vcInstallDir.isEmpty())
+                    return false;
+
+                QString phoneSdk = vcInstallDir.append("wpsdk\\wp80");
+                QDir phoneSdkDir(phoneSdk);
+                if (!phoneSdkDir.exists())
+                    return false;
+
+                t << "\nINCLUDE = " << phoneSdk << "\\include";
+                t << "\nLIB = " << phoneSdk << "\\lib";
+                t << "\nPATH = " << phoneSdk << "\\bin\n";
             }
         }
         writeNmakeParts(t);
