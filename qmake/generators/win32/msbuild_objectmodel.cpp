@@ -468,8 +468,9 @@ void VCXProjectWriter::write(XmlOutput &xml, VCProjectSingleConfig &tool)
             << valueTag(tool.Configuration.IntermediateDirectory);
     }
     if (tool.Configuration.CompilerVersion >= NET2012) {
-        xml << tagValue("PlatformToolSet",
-                        platformToolSetVersion(tool.Configuration.CompilerVersion));
+        xml << tagValue("PlatformToolset",
+                        platformToolSetVersion(tool.Configuration.CompilerVersion,
+                                               tool.Configuration.WinPhone));
     }
     if ( !tool.Configuration.PrimaryOutput.isEmpty() ) {
         xml<< tag("TargetName")
@@ -684,8 +685,9 @@ void VCXProjectWriter::write(XmlOutput &xml, VCProject &tool)
                 << valueTag(config.IntermediateDirectory);
         }
         if (config.CompilerVersion >= NET2012) {
-            xml << tagValue("PlatformToolSet",
-                            platformToolSetVersion(config.CompilerVersion));
+            xml << tagValue("PlatformToolset",
+                            platformToolSetVersion(config.CompilerVersion,
+                                                   config.WinPhone));
         }
         if (!config.PrimaryOutput.isEmpty()) {
             xml << tag("TargetName")
@@ -2080,12 +2082,12 @@ QString VCXProjectWriter::generateCondition(const VCConfiguration &config)
     return QStringLiteral("'$(Configuration)|$(Platform)'=='") + config.Name + QLatin1Char('\'');
 }
 
-QString VCXProjectWriter::platformToolSetVersion(const DotNET version)
+QString VCXProjectWriter::platformToolSetVersion(const DotNET version, bool winphoneBuild)
 {
     switch (version)
     {
     case NET2012:
-        return "v110";
+        return winphoneBuild ? "v110_wp80" : "v110";
     }
     Q_ASSERT(!"This MSVC version does not support the PlatformToolSet tag!");
     return QString();
