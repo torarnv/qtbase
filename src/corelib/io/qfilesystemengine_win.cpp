@@ -581,7 +581,7 @@ QFileSystemEntry QFileSystemEngine::absoluteName(const QFileSystemEntry &entry)
     return QFileSystemEntry(ret, QFileSystemEntry::FromInternalPath());
 }
 
-#ifndef Q_OS_WINCE
+#if !defined(Q_OS_WINCE) && !defined(Q_OS_WINRT)
 
 // FILE_INFO_BY_HANDLE_CLASS has been extended by FileIdInfo = 18 as of VS2012.
 typedef enum { Q_FileIdInfo = 18 } Q_FILE_INFO_BY_HANDLE_CLASS;
@@ -634,12 +634,12 @@ QByteArray fileIdWin8(HANDLE handle)
     }
     return result;
 }
-#endif // !Q_OS_WINCE
+#endif // !Q_OS_WINCE && !Q_OS_WINRT
 
 //static
 QByteArray QFileSystemEngine::id(const QFileSystemEntry &entry)
 {
-#ifndef Q_OS_WINCE
+#if !defined(Q_OS_WINCE) && !defined(Q_OS_WINRT)
     QByteArray result;
     const HANDLE handle =
         CreateFile((wchar_t*)entry.nativeFilePath().utf16(), GENERIC_READ,
@@ -650,7 +650,7 @@ QByteArray QFileSystemEngine::id(const QFileSystemEntry &entry)
         CloseHandle(handle);
     }
     return result;
-#else // !Q_OS_WINCE
+#else // !Q_OS_WINCE && !Q_OS_WINRT
     return entry.nativeFilePath().toLower().toLatin1();
 #endif
 }
