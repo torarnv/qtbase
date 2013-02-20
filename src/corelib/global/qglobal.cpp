@@ -2291,7 +2291,10 @@ bool qputenv(const char *varName, const QByteArray& value)
 */
 bool qunsetenv(const char *varName)
 {
-#if defined(_MSC_VER) && _MSC_VER >= 1400
+#if defined(Q_OS_WINRT)
+    envvars[varName] = "";
+    return true;
+#elif defined(_MSC_VER) && _MSC_VER >= 1400
     return _putenv_s(varName, "") == 0;
 #elif (defined(_POSIX_VERSION) && (_POSIX_VERSION-0) >= 200112L) || defined(Q_OS_BSD4)
     // POSIX.1-2001 and BSD have unsetenv
