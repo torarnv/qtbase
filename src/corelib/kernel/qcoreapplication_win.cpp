@@ -79,7 +79,7 @@ Q_CORE_EXPORT void qWinMsgHandler(QtMsgType t, const char* str)
 
 QString QCoreApplicationPrivate::appName() const
 {
-   return "self.exe";
+   return QString::fromLatin1("self.exe");
 }
 
 #else
