@@ -83,6 +83,4 @@ QT_END_NAMESPACE
 
 #endif // Q_OS_WIN
 
-#endif // Q_OS_WIN
-
 #endif // QWINEVENTNOTIFIER_H
