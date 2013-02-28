@@ -563,9 +563,17 @@ QFileSystemEntry QFileSystemEngine::absoluteName(const QFileSystemEntry &entry)
         ret = entry.filePath();
 #endif
     } else {
+#ifndef Q_OS_WINRT
         ret = QDir::cleanPath(QDir::currentPath() + QLatin1Char('/') + entry.filePath());
+#else
+        // Some WinRT APIs do not support absolute paths (due to sandboxing).
+        // Thus the port uses the executable's directory as its root directory
+        // and treats paths relative to that as absolute paths.
+        ret = QDir::cleanPath(QDir::current().relativeFilePath(entry.filePath()));
+#endif
     }
 
+#ifndef Q_OS_WINRT
     // The path should be absolute at this point.
     // From the docs :
     // Absolute paths begin with the directory separator "/"
@@ -578,6 +586,7 @@ QFileSystemEntry QFileSystemEngine::absoluteName(const QFileSystemEntry &entry)
         // Force uppercase drive letters.
         ret[0] = ret.at(0).toUpper();
     }
+#endif
     return QFileSystemEntry(ret, QFileSystemEntry::FromInternalPath());
 }
 
