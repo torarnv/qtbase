@@ -201,9 +201,14 @@ void QWinRTPageFlipper::createWindowSizeDependentResources()
     swapChainDesc.SampleDesc.Count = 1; // Don't use multi-sampling.
     swapChainDesc.SampleDesc.Quality = 0;
     swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-    swapChainDesc.BufferCount = 1; // On phone, only single buffering is supported.
     swapChainDesc.Scaling = DXGI_SCALING_STRETCH; // On phone, only stretch and aspect-ratio stretch scaling are allowed.
+#ifdef Q_OS_WINPHONE
+    swapChainDesc.BufferCount = 1; // On phone, only single buffering is supported.
     swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD; // On phone, no swap effects are supported.
+#else
+    swapChainDesc.BufferCount = 2; // has to be between 2 and DXGI_MAX_SWAP_CHAIN_BUFFERS
+    swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL; // On non-phone, it's sequential flip only
+#endif
     swapChainDesc.Flags = 0;
 
     ComPtr<IDXGIDevice1> dxgiDevice;
