@@ -85,6 +85,7 @@
 #endif
 #ifdef Q_OS_WIN
 # ifdef Q_OS_WINRT
+using namespace Windows::ApplicationModel;
 #  include "qeventdispatcher_winrt_p.h"
 # else
 #  include "qeventdispatcher_win_p.h"
@@ -1956,7 +1957,10 @@ QString QCoreApplication::applicationFilePath()
         return d->cachedApplicationFilePath;
 
 #if defined(Q_OS_WINRT)
-    d->cachedApplicationFilePath = QFileInfo(arguments().front()).filePath();
+    Windows::ApplicationModel::Package ^package = Windows::ApplicationModel::Package::Current;
+    Windows::Storage::StorageFolder ^installedLocation = package->InstalledLocation;
+    d->cachedApplicationFilePath = QString::fromWCharArray(installedLocation->Path->Data())
+            + QLatin1Char('/') + QFileInfo(arguments().front()).filePath();
     return d->cachedApplicationFilePath;
 #elif defined(Q_OS_WIN)
     d->cachedApplicationFilePath = QFileInfo(qAppFileName()).filePath();
