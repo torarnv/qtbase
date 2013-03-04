@@ -2,6 +2,7 @@ TARGET = qoffscreen
 
 PLUGIN_TYPE = platforms
 load(qt_plugin)
+winrt: QMAKE_CXXFLAGS += -ZW -EHsc
 
 QT += core-private gui-private platformsupport-private
 

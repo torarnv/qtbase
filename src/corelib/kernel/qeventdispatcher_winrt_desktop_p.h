@@ -59,7 +59,17 @@
 #include "QtCore/qabstracteventdispatcher.h"
 #include "private/qabstracteventdispatcher_p.h"
 
+namespace Windows {
+    namespace System {
+        namespace Threading {
+            class ThreadPoolTimer;
+        }
+    }
+}
+
 QT_BEGIN_NAMESPACE
+
+int qt_msectime();
 
 class QEventDispatcherWinRTPrivate;
 
@@ -102,7 +112,26 @@ protected:
     bool event(QEvent *);
     int activateTimers();
     int activateSocketNotifiers();
+};
 
+struct WinRTTimerInfo                           // internal timer info
+{
+    QObject *dispatcher;
+    int timerId;
+    int interval;
+    Qt::TimerType timerType;
+    quint64 timeout;                            // - when to actually fire
+    QObject *obj;                               // - object to receive events
+    bool inTimerEvent;
+    Windows::System::Threading::ThreadPoolTimer ^timer;
+};
+
+class QZeroTimerEvent : public QTimerEvent
+{
+public:
+    explicit inline QZeroTimerEvent(int timerId)
+        : QTimerEvent(timerId)
+    { t = QEvent::ZeroTimerEvent; }
 };
 
 class Q_CORE_EXPORT QEventDispatcherWinRTPrivate : public QAbstractEventDispatcherPrivate
@@ -112,6 +141,13 @@ class Q_CORE_EXPORT QEventDispatcherWinRTPrivate : public QAbstractEventDispatch
 public:
     QEventDispatcherWinRTPrivate();
     ~QEventDispatcherWinRTPrivate();
+
+    QList<WinRTTimerInfo*> timerVec;
+    QHash<int, WinRTTimerInfo*> timerDict;
+
+    void registerTimer(WinRTTimerInfo *t);
+    void unregisterTimer(WinRTTimerInfo *t);
+    void sendTimerEvent(int timerId);
 };
 
 QT_END_NAMESPACE
