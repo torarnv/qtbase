@@ -21,7 +21,8 @@ SOURCES = \
     qwinrtscreen.cpp \
     qwinrtwindow.cpp \
     pointervalue.cpp \
-    qwinrtpageflipper.cpp
+    qwinrtpageflipper.cpp \
+    qwinrtkeymapper.cpp
 
 HEADERS = \
     qwinrtbackingstore.h \
@@ -31,7 +32,8 @@ HEADERS = \
     qwinrtscreen.h \
     qwinrtwindow.h \
     pointervalue.h \
-    qwinrtpageflipper.h
+    qwinrtpageflipper.h \
+    qwinrtkeymapper.h
 
 OTHER_FILES += winrt.json
 

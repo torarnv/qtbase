@@ -58,6 +58,7 @@
 
 QT_BEGIN_NAMESPACE
 
+class QWinRTKeyMapper;
 class QWinRTPageFlipper;
 
 class QWinRTScreen : public QPlatformScreen
@@ -71,7 +72,7 @@ public:
     void update(const QRegion &region, const QPoint &offset, const void *handle, int stride);
 
 private:
-    HRESULT handleKeyEvent(QEvent::Type type, ABI::Windows::UI::Core::ICoreWindow *window, ABI::Windows::UI::Core::IKeyEventArgs *args);
+    HRESULT handleKeyEvent(ABI::Windows::UI::Core::ICoreWindow *window, ABI::Windows::UI::Core::IKeyEventArgs *args);
     HRESULT handlePointerEvent(Qt::TouchPointState pointState, ABI::Windows::UI::Core::ICoreWindow *window, ABI::Windows::UI::Core::IPointerEventArgs *args);
 
 private:
@@ -97,6 +98,7 @@ private:
     QRect m_geometry;
     QImage::Format m_format;
     int m_depth;
+    QWinRTKeyMapper *m_keyMapper;
     QWinRTPageFlipper *m_pageFlipper;
 };
 

@@ -43,6 +43,7 @@
 
 #include "qwinrtscreen.h"
 #include "qwinrtbackingstore.h"
+#include "qwinrtkeymapper.h"
 #include "qwinrtpageflipper.h"
 #include "pointervalue.h"
 
@@ -71,6 +72,7 @@ QWinRTScreen::QWinRTScreen(ICoreWindow *window)
     : m_window(window)
     , m_depth(32)
     , m_format(QImage::Format_ARGB32_Premultiplied)
+    , m_keyMapper(new QWinRTKeyMapper())
     , m_pageFlipper(new QWinRTPageFlipper(window))
 {
     // TODO: query touch device capabilities
@@ -128,14 +130,11 @@ void QWinRTScreen::update(const QRegion &region, const QPoint &offset, const voi
     m_pageFlipper->update(region, offset, handle, stride);
 }
 
-HRESULT QWinRTScreen::handleKeyEvent(QEvent::Type type, ABI::Windows::UI::Core::ICoreWindow *window, ABI::Windows::UI::Core::IKeyEventArgs *args)
+HRESULT QWinRTScreen::handleKeyEvent(ABI::Windows::UI::Core::ICoreWindow *window, ABI::Windows::UI::Core::IKeyEventArgs *args)
 {
     Q_UNUSED(window);
 
-    CorePhysicalKeyStatus status;
-    args->get_KeyStatus(&status);
-    QWindowSystemInterface::handleKeyEvent(0, type, status.ScanCode, Qt::NoModifier); // TODO: a way to get modifiers?
-    return S_OK;
+    return m_keyMapper->translateKeyEvent(0, args) ? S_OK : S_FALSE;
 }
 
 HRESULT QWinRTScreen::handlePointerEvent(Qt::TouchPointState pointState, ABI::Windows::UI::Core::ICoreWindow *window, ABI::Windows::UI::Core::IPointerEventArgs *args)
@@ -158,12 +157,12 @@ HRESULT QWinRTScreen::handlePointerEvent(Qt::TouchPointState pointState, ABI::Wi
 
 HRESULT QWinRTScreen::onKeyDown(ICoreWindow *window, IKeyEventArgs *args)
 {
-    return handleKeyEvent(QEvent::KeyPress, window, args);
+    return handleKeyEvent(window, args);
 }
 
 HRESULT QWinRTScreen::onKeyUp(ICoreWindow *window, IKeyEventArgs *args)
 {
-    return handleKeyEvent(QEvent::KeyRelease, window, args);
+    return handleKeyEvent(window, args);
 }
 
 HRESULT QWinRTScreen::onPointerEntered(ICoreWindow *window, IPointerEventArgs *args)
