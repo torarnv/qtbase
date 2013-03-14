@@ -172,7 +172,7 @@ QT_CPU_FEATURES = $$eval(QT_CPU_FEATURES.$$QT_ARCH)
         silent:mips_dspr2_compiler.commands = @echo compiling[mips_dspr2] ${QMAKE_FILE_IN} && $$mips_dspr2_compiler.commands
         QMAKE_EXTRA_COMPILERS += mips_dspr2_compiler
     }
-} else:win32-msvc*|winrt-msvc* {
+} else:win32-msvc*|winrt-x86* {
     sse2 {
         HEADERS += $$SSE2_HEADERS
 
