@@ -304,7 +304,9 @@ bool QWinRTPageFlipper::displayBuffer(QPlatformScreenBuffer *buffer)
 
 void QWinRTPageFlipper::resize(const QSize &size)
 {
-    Q_UNUSED(size)
+    if (size == m_size)
+        return;
+
     updateForWindowSizeChange();
 }
 
