@@ -42,25 +42,27 @@
 #ifndef POINTERVALUE_H
 #define POINTERVALUE_H
 
-#include <Qt>
-#include <QtCore/qpoint.h>
+#include <QtCore/QPointF>
 #include <qpa/qwindowsysteminterface.h>
 
-#include <wrl.h>
+namespace ABI {
+namespace Windows {
+namespace UI {
+namespace Core {
+struct IPointerEventArgs;
+}
+}
+}
+}
 
-#include <windows.system.h>
-#include <windows.devices.input.h>
-#include <windows.ui.h>
-#include <windows.ui.core.h>
-#include <windows.ui.input.h>
-
+class PointerValuePrivate;
 class PointerValue
 {
 public:
-    PointerValue(ABI::Windows::UI::Core::ICoreWindow* window, ABI::Windows::UI::Core::IPointerEventArgs *args);
+    PointerValue(ABI::Windows::UI::Core::IPointerEventArgs *args);
     ~PointerValue();
     Qt::KeyboardModifiers modifiers() const;
-    ABI::Windows::Devices::Input::PointerDeviceType type() const;
+    bool isMouse() const;
     Qt::MouseButtons buttons() const;
     QPointF pos() const;
     int delta() const;
@@ -68,10 +70,7 @@ public:
     QWindowSystemInterface::TouchPoint touchPoint() const;
 
 private:
-    Microsoft::WRL::ComPtr<ABI::Windows::UI::Input::IPointerPoint> point;
-    Microsoft::WRL::ComPtr<ABI::Windows::UI::Input::IPointerPointProperties> properties;
-    Microsoft::WRL::ComPtr<ABI::Windows::Devices::Input::IPointerDevice> device;
-    ABI::Windows::System::VirtualKeyModifiers mods;
+    QScopedPointer<PointerValuePrivate> d;
 };
 
 #endif // POINTERVALUE_H

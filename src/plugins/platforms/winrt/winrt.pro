@@ -7,33 +7,31 @@ load(qt_plugin)
 
 QT += core-private gui-private platformsupport-private
 
-LIBS += -ld3d11 -ldxgi
+LIBS += -ld3d11
 DEFINES += __WRL_NO_DEFAULT_LIB__
 
 winrt:QMAKE_CXXFLAGS += -ZW -EHsc
 
 SOURCES = \
-    main.cpp \
+    main.cpp  \
+    pointervalue.cpp \
     qwinrtbackingstore.cpp \
     qwinrteventdispatcher.cpp \
-    #qwinrtglcontext.cpp \
     qwinrtintegration.cpp \
-    qwinrtscreen.cpp \
-    qwinrtwindow.cpp \
-    pointervalue.cpp \
+    qwinrtkeymapper.cpp \
     qwinrtpageflipper.cpp \
-    qwinrtkeymapper.cpp
+    qwinrtscreen.cpp \
+    qwinrtwindow.cpp
 
 HEADERS = \
+    pointervalue.h \
     qwinrtbackingstore.h \
     qwinrteventdispatcher.h \
-    #qwinrtglcontext.h \
     qwinrtintegration.h \
-    qwinrtscreen.h \
-    qwinrtwindow.h \
-    pointervalue.h \
+    qwinrtkeymapper.h \
     qwinrtpageflipper.h \
-    qwinrtkeymapper.h
+    qwinrtscreen.h \
+    qwinrtwindow.h
 
 OTHER_FILES += winrt.json
 

@@ -43,18 +43,27 @@
 #define QWINRTSCREEN_H
 
 #include <qpa/qplatformscreen.h>
-#include <qpa/qplatformscreenpageflipper.h>
 
 #include <QtCore/QHash>
-#include <QtCore/qcoreevent.h>
 #include <QtGui/QTouchDevice>
 
-#include <wrl.h>
-#include <windows.system.h>
-#include <windows.devices.input.h>
-#include <windows.ui.h>
-#include <windows.ui.core.h>
-#include <windows.ui.input.h>
+#include <EventToken.h>
+
+namespace ABI {
+namespace Windows {
+namespace UI {
+namespace Core {
+struct ICoreWindow;
+struct ICoreWindowEventArgs;
+struct IKeyEventArgs;
+struct IPointerEventArgs;
+struct IVisibilityChangedEventArgs;
+struct IWindowActivatedEventArgs;
+struct IWindowSizeChangedEventArgs;
+}
+}
+}
+}
 
 QT_BEGIN_NAMESPACE
 

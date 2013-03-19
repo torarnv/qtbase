@@ -39,18 +39,22 @@
 **
 ****************************************************************************/
 
-#define NOMINMAX
-
+#include <qt_windows.h>
 #include "qwinrtscreen.h"
 #include "qwinrtbackingstore.h"
 #include "qwinrtkeymapper.h"
 #include "qwinrtpageflipper.h"
 #include "pointervalue.h"
-
 #include <qpa/qwindowsysteminterface.h>
 
-#include <QtGui/QTouchDevice>
 #include <QtGui/QGuiApplication>
+
+#include <wrl.h>
+#include <windows.system.h>
+#include <windows.devices.input.h>
+#include <windows.ui.h>
+#include <windows.ui.core.h>
+#include <windows.ui.input.h>
 
 using namespace Microsoft::WRL;
 using namespace ABI::Windows::Foundation;
@@ -137,19 +141,20 @@ HRESULT QWinRTScreen::handleKeyEvent(ABI::Windows::UI::Core::ICoreWindow *window
     return m_keyMapper->translateKeyEvent(0, args) ? S_OK : S_FALSE;
 }
 
-HRESULT QWinRTScreen::handlePointerEvent(Qt::TouchPointState pointState, ABI::Windows::UI::Core::ICoreWindow *window, ABI::Windows::UI::Core::IPointerEventArgs *args)
+HRESULT QWinRTScreen::handlePointerEvent(Qt::TouchPointState pointState, ICoreWindow *window, IPointerEventArgs *args)
 {
-    PointerValue point(window, args);
+    PointerValue point(args);
 
     QPointF pos = point.pos();
 
-    if (point.type() == PointerDeviceType_Mouse) {
+    if (point.isMouse()) {
         QWindowSystemInterface::handleMouseEvent(0, pos, pos, point.buttons(), point.modifiers());
     } else {
         QWindowSystemInterface::TouchPoint tp = point.touchPoint();
         tp.state = pointState;
+        // ###FIXME: points should be in a running map so that multitouch can be used
         QList<QWindowSystemInterface::TouchPoint> points;
-        points << tp;
+        points.append(tp);
         QWindowSystemInterface::handleTouchEvent(0, &m_touchDevice, points, point.modifiers());
     }
     return S_OK;
@@ -198,7 +203,7 @@ HRESULT QWinRTScreen::onPointerReleased(ICoreWindow *window, IPointerEventArgs *
 
 HRESULT QWinRTScreen::onPointerWheelChanged(ICoreWindow *window, IPointerEventArgs *args)
 {
-    PointerValue point(window, args);
+    PointerValue point(args);
     QPointF pos = point.pos();
     QWindowSystemInterface::handleWheelEvent(0, pos, pos, point.delta(), point.orientation(), point.modifiers());
     return S_OK;

@@ -41,12 +41,32 @@
 
 #include "pointervalue.h"
 
-PointerValue::PointerValue(ABI::Windows::UI::Core::ICoreWindow* window, ABI::Windows::UI::Core::IPointerEventArgs *args)
+#include <wrl.h>
+#include <windows.system.h>
+#include <windows.devices.input.h>
+#include <windows.ui.h>
+#include <windows.ui.core.h>
+#include <windows.ui.input.h>
+
+using namespace ABI::Windows::UI::Input;
+using namespace ABI::Windows::Devices::Input;
+
+class PointerValuePrivate
 {
-    args->get_KeyModifiers(&mods);
-    args->get_CurrentPoint(&point);
-    point->get_Properties(&properties);
-    point->get_PointerDevice(&device);
+    Microsoft::WRL::ComPtr<IPointerPoint> point;
+    Microsoft::WRL::ComPtr<IPointerPointProperties> properties;
+    Microsoft::WRL::ComPtr<IPointerDevice> device;
+    ABI::Windows::System::VirtualKeyModifiers mods;
+    friend class PointerValue;
+};
+
+PointerValue::PointerValue(ABI::Windows::UI::Core::IPointerEventArgs *args)
+    : d(new PointerValuePrivate)
+{
+    args->get_CurrentPoint(&d->point);
+    d->point->get_Properties(&d->properties);
+    d->point->get_PointerDevice(&d->device);
+    args->get_KeyModifiers(&d->mods);
 }
 
 PointerValue::~PointerValue()
@@ -55,69 +75,77 @@ PointerValue::~PointerValue()
 
 Qt::KeyboardModifiers PointerValue::modifiers() const
 {
-    return (mods & 1 ? Qt::ControlModifier : 0) | (mods & 4 ? Qt::ShiftModifier : 0) | (mods & 8 ? Qt::MetaModifier : 0);
+    return (d->mods & 1 ? Qt::ControlModifier : 0)
+            | (d->mods & 4 ? Qt::ShiftModifier : 0)
+            | (d->mods & 8 ? Qt::MetaModifier : 0);
 }
 
-ABI::Windows::Devices::Input::PointerDeviceType PointerValue::type() const
+bool PointerValue::isMouse() const
 {
-    if (device == nullptr)
-        return ABI::Windows::Devices::Input::PointerDeviceType_Touch;
-    ABI::Windows::Devices::Input::PointerDeviceType t;
-    device->get_PointerDeviceType(&t);
-    return t;
+    if (!d->device)
+        return false;
+    PointerDeviceType type;
+    d->device->get_PointerDeviceType(&type);
+    return type == PointerDeviceType_Mouse;
 }
 
 Qt::MouseButtons PointerValue::buttons() const
 {
-    boolean a;
-    Qt::MouseButtons b;
-    properties->get_IsLeftButtonPressed(&a); b |= a ? Qt::LeftButton : Qt::NoButton;
-    properties->get_IsMiddleButtonPressed(&a); b |= a ? Qt::MiddleButton : Qt::NoButton;
-    properties->get_IsRightButtonPressed(&a); b |= a ? Qt::RightButton : Qt::NoButton;
-    properties->get_IsXButton1Pressed(&a); b |= a ? Qt::XButton1 : Qt::NoButton;
-    properties->get_IsXButton2Pressed(&a); b |= a ? Qt::XButton2 : Qt::NoButton;
-    return b;
+    boolean isPressed;
+    Qt::MouseButtons buttons;
+    d->properties->get_IsLeftButtonPressed(&isPressed);
+    buttons |= isPressed ? Qt::LeftButton : Qt::NoButton;
+    d->properties->get_IsMiddleButtonPressed(&isPressed);
+    buttons |= isPressed ? Qt::MiddleButton : Qt::NoButton;
+    d->properties->get_IsRightButtonPressed(&isPressed);
+    buttons |= isPressed ? Qt::RightButton : Qt::NoButton;
+    d->properties->get_IsXButton1Pressed(&isPressed);
+    buttons |= isPressed ? Qt::XButton1 : Qt::NoButton;
+    d->properties->get_IsXButton2Pressed(&isPressed);
+    buttons |= isPressed ? Qt::XButton2 : Qt::NoButton;
+    return buttons;
 }
 
 QPointF PointerValue::pos() const
 {
-    ABI::Windows::Foundation::Point pt;
-    point->get_Position(&pt);
-    return QPointF(pt.X, pt.Y);
+    ABI::Windows::Foundation::Point pos;
+    d->point->get_Position(&pos);
+    return QPointF(pos.X, pos.Y);
 }
 
 int PointerValue::delta() const
 {
-    int d;
-    properties->get_MouseWheelDelta(&d);
-    return d;
+    int delta;
+    d->properties->get_MouseWheelDelta(&delta);
+    return delta;
 }
 
 Qt::Orientation PointerValue::orientation() const
 {
-    boolean b;
-    properties->get_IsHorizontalMouseWheel(&b);
-    return b ? Qt::Horizontal : Qt::Vertical;
+    boolean isHorizontal;
+    d->properties->get_IsHorizontalMouseWheel(&isHorizontal);
+    return isHorizontal ? Qt::Horizontal : Qt::Vertical;
 }
 
 QWindowSystemInterface::TouchPoint PointerValue::touchPoint() const
 {
-    QWindowSystemInterface::TouchPoint tp;
+    QWindowSystemInterface::TouchPoint touchPoint;
 
     quint32 id;
-    point->get_PointerId(&id);
-    tp.id = id;
+    d->point->get_PointerId(&id);
+    touchPoint.id = id;
 
-    if (device) {
-        ABI::Windows::Foundation::Rect sceneRect;
-        device->get_ScreenRect(&sceneRect);
-        QPointF pt = pos();
-        tp.area = QRectF(pt, QSize(1, 1)).translated(-0.5, -0.5);
-        tp.normalPosition = QPointF(pt.x()/sceneRect.Width, pt.y()/sceneRect.Height);
+    ABI::Windows::Foundation::Rect rect;
+    d->properties->get_ContactRect(&rect);
+    touchPoint.area = QRectF(rect.X, rect.Y, rect.Width, rect.Height);
+    ABI::Windows::Foundation::Point pos;
+    d->point->get_Position(&pos);
+    if (d->device) {
+        ABI::Windows::Foundation::Rect screenRect;
+        d->device->get_ScreenRect(&screenRect);
+        touchPoint.normalPosition = QPointF(pos.X/screenRect.Width, pos.Y/screenRect.Height);
     } else {
-        QPointF pt = pos();
-        tp.area = QRectF(pt, QSize(1, 1)).translated(-0.5, -0.5);
-        tp.normalPosition = pt;
+        touchPoint.normalPosition = QPointF(pos.X, pos.Y);
     }
-    return tp;
+    return touchPoint;
 }

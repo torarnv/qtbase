@@ -43,14 +43,10 @@
 #define QWINRTINTEGRATION_H
 
 #include <qpa/qplatformintegration.h>
-#include <qpa/qplatformnativeinterface.h>
 
 QT_BEGIN_NAMESPACE
 
-class QWinRTView;
-class QThread;
 class QAbstractEventDispatcher;
-class QWinRTScreen;
 
 class QWinRTIntegration : public QPlatformIntegration
 {

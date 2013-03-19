@@ -41,16 +41,9 @@
 
 #include "qwinrtintegration.h"
 #include "qwinrtwindow.h"
-//#include "qwinrtglcontext.h"
 #include "qwinrteventdispatcher.h"
 #include "qwinrtbackingstore.h"
 #include "qwinrtscreen.h"
-#include <thread>
-
-#include <QtCore/QDebug>
-#include <QtCore/QCoreApplication>
-#include <QtCore/QThread>
-#include <QtConcurrent/QtConcurrentRun>
 
 #include <QtPlatformSupport/private/qbasicfontdatabase_p.h>
 
