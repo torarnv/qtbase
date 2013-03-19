@@ -50,39 +50,85 @@
 
 extern "C" int main(int, char **);
 
+#include <qbytearray.h>
+#include <qstring.h>
+#include <qlist.h>
+#include <qvector.h>
+
 #include <wrl.h>
 #include <Windows.ApplicationModel.core.h>
+
+typedef ABI::Windows::Foundation::ITypedEventHandler<ABI::Windows::ApplicationModel::Core::CoreApplicationView *, ABI::Windows::ApplicationModel::Activation::IActivatedEventArgs *> ActivatedHandler;
 
 class AppxContainer : public Microsoft::WRL::RuntimeClass<ABI::Windows::ApplicationModel::Core::IFrameworkView>
 {
 public:
-    AppxContainer() { }
+    AppxContainer(int argc, wchar_t **argv) : m_argc(argc)
+    {
+        m_argv.reserve(argc);
+        for (int i = 0; i < argc; ++i) {
+            QByteArray arg = QString::fromWCharArray(argv[i]).toLocal8Bit();
+            m_argv.append(new char[arg.length() + 1]);
+            qstrcpy(m_argv.last(), arg.constData());
+        }
+    }
 
     // IFrameworkView Methods
-    HRESULT __stdcall Initialize(ABI::Windows::ApplicationModel::Core::ICoreApplicationView *) { return S_OK; }
-    HRESULT __stdcall SetWindow(ABI::Windows::UI::Core::ICoreWindow *) { return S_OK; }
-    HRESULT __stdcall Load(HSTRING) { return S_OK; }
-    HRESULT __stdcall Run() {
-        // TODO: pass actual arguments from system
-        char *argv[] = {"app.exe", "-platform", "winrt", "-platformpluginpath", "."};
-        int argc = ARRAYSIZE(argv);
-        main(argc, argv);
+    HRESULT __stdcall Initialize(ABI::Windows::ApplicationModel::Core::ICoreApplicationView *view)
+    {
+        view->add_Activated(Microsoft::WRL::Callback<ActivatedHandler>(this, &AppxContainer::onActivated).Get(),
+                            &m_activationToken);
         return S_OK;
     }
+    HRESULT __stdcall SetWindow(ABI::Windows::UI::Core::ICoreWindow *) { return S_OK; }
+    HRESULT __stdcall Load(HSTRING) { return S_OK; }
+    HRESULT __stdcall Run()
+    {
+        return main(m_argv.count(), m_argv.data());
+    }
     HRESULT __stdcall Uninitialize() { return S_OK; }
+
+private:
+    // Activation handler
+    HRESULT onActivated(ABI::Windows::ApplicationModel::Core::ICoreApplicationView *,
+                      ABI::Windows::ApplicationModel::Activation::IActivatedEventArgs *args)
+    {
+        ABI::Windows::ApplicationModel::Activation::ILaunchActivatedEventArgs *launchArgs;
+        if (SUCCEEDED(args->QueryInterface(&launchArgs))) {
+            qDeleteAll(m_argv.begin() + m_argc, m_argv.end());
+            m_argv.resize(m_argc);
+            HSTRING arguments;
+            launchArgs->get_Arguments(&arguments);
+            QList<QByteArray> args = QString::fromWCharArray(WindowsGetStringRawBuffer(arguments, nullptr)).toLocal8Bit().split(' ');
+            foreach (const QByteArray &arg, args) {
+                m_argv.append(new char[arg.length() + 1]);
+                qstrcpy(m_argv.last(), arg.constData());
+            }
+        }
+        return S_OK;
+    }
+
+    int m_argc;
+    QVector<char*> m_argv;
+    EventRegistrationToken m_activationToken;
 };
 
 class AppxViewSource : public Microsoft::WRL::RuntimeClass<ABI::Windows::ApplicationModel::Core::IFrameworkViewSource>
 {
 public:
-    AppxViewSource() { }
-    HRESULT __stdcall CreateView(ABI::Windows::ApplicationModel::Core::IFrameworkView **frameworkView) {
-        return (*frameworkView = Microsoft::WRL::Make<AppxContainer>().Detach()) ? S_OK : E_OUTOFMEMORY;
+    AppxViewSource(int argc, wchar_t *argv[]) : argc(argc), argv(argv) { }
+    HRESULT __stdcall CreateView(ABI::Windows::ApplicationModel::Core::IFrameworkView **frameworkView)
+    {
+        return (*frameworkView = Microsoft::WRL::Make<AppxContainer>(argc, argv).Detach()) ? S_OK : E_OUTOFMEMORY;
     }
+private:
+    int argc;
+    wchar_t **argv;
 };
 
 // Main entry point for Appx containers
-int __stdcall WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
+[Platform::MTAThread]
+int wmain(int argc, wchar_t *argv[])
 {
     if (FAILED(Windows::Foundation::Initialize(RO_INIT_MULTITHREADED)))
         return 1;
@@ -91,7 +137,5 @@ int __stdcall WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     if (FAILED(Windows::Foundation::GetActivationFactory(Microsoft::WRL::Wrappers::HString::MakeReference(RuntimeClass_Windows_ApplicationModel_Core_CoreApplication).Get(), &appFactory)))
         return 2;
 
-    // TODO: pass arguments from command line
-    // Note that GetCommandLine() is not listed as a supported Windows Store API, so the arguments may need to come from WinMain.
-    return appFactory->Run(Microsoft::WRL::Make<AppxViewSource>().Get());
+    return appFactory->Run(Microsoft::WRL::Make<AppxViewSource>(argc, argv).Get());
 }

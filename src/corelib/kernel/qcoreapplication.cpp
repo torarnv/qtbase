@@ -85,7 +85,6 @@
 #endif
 #ifdef Q_OS_WIN
 # ifdef Q_OS_WINRT
-using namespace Windows::ApplicationModel;
 #  include "qeventdispatcher_winrt_p.h"
 # else
 #  include "qeventdispatcher_win_p.h"
@@ -521,6 +520,9 @@ void QCoreApplicationPrivate::appendApplicationPathToLibraryPaths()
     app_location = QDir(app_location).canonicalPath();
     if (QFile::exists(app_location) && !app_libpaths->contains(app_location))
         app_libpaths->append(app_location);
+#ifdef Q_OS_WINRT // On WinRT, we expect to look in the current (application) directory
+    app_libpaths->append(".");
+#endif
 #endif
 }
 
@@ -1957,10 +1959,7 @@ QString QCoreApplication::applicationFilePath()
         return d->cachedApplicationFilePath;
 
 #if defined(Q_OS_WINRT)
-    Windows::ApplicationModel::Package ^package = Windows::ApplicationModel::Package::Current;
-    Windows::Storage::StorageFolder ^installedLocation = package->InstalledLocation;
-    d->cachedApplicationFilePath = QString::fromWCharArray(installedLocation->Path->Data())
-            + QLatin1Char('/') + QFileInfo(arguments().front()).filePath();
+    d->cachedApplicationFilePath = QFileInfo(arguments().first()).filePath();
     return d->cachedApplicationFilePath;
 #elif defined(Q_OS_WIN)
     d->cachedApplicationFilePath = QFileInfo(qAppFileName()).filePath();
