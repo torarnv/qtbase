@@ -143,6 +143,8 @@ HRESULT QWinRTScreen::handleKeyEvent(ABI::Windows::UI::Core::ICoreWindow *window
 
 HRESULT QWinRTScreen::handlePointerEvent(Qt::TouchPointState pointState, ICoreWindow *window, IPointerEventArgs *args)
 {
+    Q_UNUSED(window);
+
     PointerValue point(args);
 
     QPointF pos = point.pos();
@@ -203,6 +205,8 @@ HRESULT QWinRTScreen::onPointerReleased(ICoreWindow *window, IPointerEventArgs *
 
 HRESULT QWinRTScreen::onPointerWheelChanged(ICoreWindow *window, IPointerEventArgs *args)
 {
+    Q_UNUSED(window);
+
     PointerValue point(args);
     QPointF pos = point.pos();
     QWindowSystemInterface::handleWheelEvent(0, pos, pos, point.delta(), point.orientation(), point.modifiers());
