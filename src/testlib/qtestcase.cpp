@@ -2562,9 +2562,9 @@ void QTest::qSleep(int ms)
 {
     QTEST_ASSERT(ms > 0);
 
-#ifdef Q_OS_WINRT
+#if defined(Q_OS_WINRT)
     std::this_thread::sleep_for(std::chrono::milliseconds(ms));
-#elif Q_OS_WIN
+#elif defined(Q_OS_WIN)
     Sleep(uint(ms));
 #else
     struct timespec ts = { ms / 1000, (ms % 1000) * 1000 * 1000 };
