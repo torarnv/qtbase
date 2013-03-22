@@ -48,6 +48,8 @@
 #include <windows.ui.input.h>
 #include <windows.devices.input.h>
 
+#include <QtCore/qvector.h>
+
 using namespace Microsoft::WRL;
 using namespace ABI::Windows::Foundation;
 using namespace ABI::Windows::System;
@@ -139,14 +141,13 @@ void QWinRTPageFlipper::createDeviceResources()
 
 const QSize &QWinRTPageFlipper::size() const
 {
-    return m_size;
+    return m_windowBounds.size();
 }
 
 void QWinRTPageFlipper::handleDeviceLost()
 {
     // Reset these member variables to ensure that UpdateForWindowSizeChange recreates all resources.
-    m_windowBounds.Width = 0;
-    m_windowBounds.Height = 0;
+    m_windowBounds = QRect();
     m_swapChain = nullptr;
     m_frontBuffer = nullptr;
     m_backBuffer = nullptr;
@@ -175,7 +176,21 @@ void QWinRTPageFlipper::present()
     // The first argument instructs DXGI to block until VSync, putting the application
     // to sleep until the next VSync. This ensures we don't waste any cycles rendering
     // frames that will never be displayed to the screen.
-    HRESULT hr = m_swapChain->Present(1, 0);
+    HRESULT hr;
+    if (m_dirtyRegion == m_windowBounds) {
+        hr = m_swapChain->Present(1, 0);
+    } else {
+        QVector<RECT> rects;
+        rects.reserve(m_dirtyRegion.rects().count());
+        DXGI_PRESENT_PARAMETERS presentParameters = { rects.count(), rects.data(), NULL, NULL };
+        foreach (const QRect &rect, m_dirtyRegion.rects())
+            rects.push_back(CD3D11_RECT(rect.left(), rect.top(), rect.right(), rect.bottom()));
+
+        hr = m_swapChain->Present1(1, 0, &presentParameters);
+    }
+
+    // Clear the dirty tracker
+    m_dirtyRegion = QRegion();
 
     // If the device was removed either by a disconnect or a driver upgrade, we
     // must recreate all device resources.
@@ -187,15 +202,15 @@ void QWinRTPageFlipper::present()
 
 void QWinRTPageFlipper::createWindowSizeDependentResources()
 {
-    m_window->get_Bounds(&m_windowBounds);
+    Rect windowBounds;
+    m_window->get_Bounds(&windowBounds);
 
     // Calculate the necessary swap chain and render target size in pixels.
-    m_size.setWidth(m_windowBounds.Width);
-    m_size.setHeight(m_windowBounds.Height);
+    m_windowBounds = QRect(0, 0, windowBounds.Width, windowBounds.Height);
 
     DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {0};
-    swapChainDesc.Width = static_cast<UINT>(m_size.width()); // Match the size of the window.
-    swapChainDesc.Height = static_cast<UINT>(m_size.height());
+    swapChainDesc.Width = static_cast<UINT>(m_windowBounds.width()); // Match the size of the window.
+    swapChainDesc.Height = static_cast<UINT>(m_windowBounds.height());
     swapChainDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM; // This is the most common swap chain format.
     swapChainDesc.Stereo = false;
     swapChainDesc.SampleDesc.Count = 1; // Don't use multi-sampling.
@@ -237,7 +252,7 @@ void QWinRTPageFlipper::createWindowSizeDependentResources()
             0, __uuidof(ID3D11Texture2D), &m_frontBuffer));
 
     D3D11_TEXTURE2D_DESC desc = {
-        m_size.width(), m_size.height(),
+        m_windowBounds.width(), m_windowBounds.height(),
         1, 1,
         DXGI_FORMAT_B8G8R8A8_UNORM,
         {1, 0},
@@ -249,9 +264,9 @@ void QWinRTPageFlipper::createWindowSizeDependentResources()
 
     throwIfFailed(m_device->CreateTexture2D(&desc, nullptr, &m_backBuffer));
 
-    m_dirtyRects.clear();
-
-    present();
+    m_dirtyRegion = m_windowBounds;
+    m_bufferData.resize(m_windowBounds.width() * m_windowBounds.height() * 4);
+    displayBuffer(0);
 }
 
 void QWinRTPageFlipper::updateForWindowSizeChange()
@@ -268,32 +283,35 @@ void QWinRTPageFlipper::update(const QRegion &region, const QPoint &offset, cons
     if (!m_context || !m_backBuffer)
         return;
 
-    D3D11_MAPPED_SUBRESOURCE target;
+    m_dirtyRegion += region.translated(offset);
 
-    if (FAILED(m_context->Map(
-                   m_backBuffer.Get(), 0,
-                   D3D11_MAP_WRITE_DISCARD, 0,
-                   &target))) {
-        qWarning(Q_FUNC_INFO ": failed to get backbuffer");
-        return;
-    }
-
-    m_dirtyRects += region.translated(offset).rects();
-
+    // Copy to internal backing store
     foreach (const QRect &rect, region.rects())
-        rectCopy(target.pData, target.RowPitch, handle, stride, rect, offset);
+        rectCopy(m_bufferData.data(), m_windowBounds.width() * 4, handle, stride, rect, offset);
 
-    m_context->Unmap(m_backBuffer.Get(), 0);
     displayBuffer(0);
 }
 
 bool QWinRTPageFlipper::displayBuffer(QPlatformScreenBuffer *buffer)
 {
     Q_UNUSED(buffer)    // Using internal buffer - consider if this could be encapsulated into separate class
-    if (m_dirtyRects.isEmpty())
+    if (m_dirtyRegion.isEmpty())
         return false;
     if (!m_context || !m_swapChain)
         return false;
+
+    // TODO: determine if this can be delayed/queued
+    D3D11_MAPPED_SUBRESOURCE target;
+    if (FAILED(m_context->Map(
+                   m_backBuffer.Get(), 0,
+                   D3D11_MAP_WRITE_DISCARD, 0,
+                   &target))) {
+        qWarning(Q_FUNC_INFO ": failed to map backbuffer");
+        return false;
+    }
+    rectCopy(target.pData, target.RowPitch, m_bufferData.data(),
+             m_windowBounds.width() * 4, m_windowBounds, QPoint());
+    m_context->Unmap(m_backBuffer.Get(), 0);
 
     m_context->CopyResource(m_frontBuffer.Get(), m_backBuffer.Get());
     emit bufferReleased(buffer);

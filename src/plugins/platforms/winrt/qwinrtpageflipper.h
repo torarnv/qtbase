@@ -44,10 +44,10 @@
 
 #include <qpa/qplatformscreenpageflipper.h>
 
+#include <QtCore/qbytearray.h>
 #include <QtCore/qsize.h>
 #include <QtCore/qrect.h>
 #include <QtGui/qregion.h>
-#include <QtCore/qvector.h>
 
 #include <wrl.h>
 #include <d3d11_1.h>
@@ -80,9 +80,9 @@ private:
     void handleDeviceLost();
 
 private:
-    QSize m_size;
-    QVector<QRect> m_dirtyRects;
-    ABI::Windows::Foundation::Rect m_windowBounds;
+    QRegion m_dirtyRegion;
+    QRect m_windowBounds;
+    QByteArray m_bufferData;
 
     Microsoft::WRL::ComPtr<ABI::Windows::UI::Core::ICoreWindow> m_window;
     Microsoft::WRL::ComPtr<ID3D11Device1> m_device;
