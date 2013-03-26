@@ -712,7 +712,8 @@ void QLibraryPrivate::updatePluginState()
                 hTempModule = ::LoadLibraryEx((wchar_t*)QDir::toNativeSeparators(fileName).utf16(), 0, dwFlags);
                 SetErrorMode(oldmode);
 #else
-                hTempModule = LoadPackagedLibrary((wchar_t*)QDir::toNativeSeparators(fileName).utf16(), 0);
+                QString path = QDir::toNativeSeparators(QDir::current().relativeFilePath(fileName));
+                hTempModule = LoadPackagedLibrary((wchar_t*)path.utf16(), 0);
 #endif
 #else
                 temporary_load =  load();

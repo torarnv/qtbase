@@ -112,7 +112,8 @@ bool QLibraryPrivate::load_sys()
 #ifndef Q_OS_WINRT
         pHnd = LoadLibrary((wchar_t*)QDir::toNativeSeparators(attempt).utf16());
 #else
-        pHnd = LoadPackagedLibrary((wchar_t*)QDir::toNativeSeparators(attempt).utf16(), 0);
+        QString path = QDir::toNativeSeparators(QDir::current().relativeFilePath(fileName));
+        pHnd = LoadPackagedLibrary((wchar_t*)path.utf16(), 0);
         if (pHnd)
             qualifiedFileName = attempt;
 #endif
