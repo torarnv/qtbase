@@ -97,7 +97,7 @@
 #  define Q_OS_LINUX
 #elif defined(__CYGWIN__)
 #  define Q_OS_CYGWIN
-#elif !defined(SAG_COM) && (defined(WIN64) || defined(_WIN64) || defined(__WIN64__))
+#elif !defined(SAG_COM) && (!defined(WINAPI_FAMILY) || WINAPI_FAMILY==WINAPI_FAMILY_DESKTOP_APP) && (defined(WIN64) || defined(_WIN64) || defined(__WIN64__))
 #  define Q_OS_WIN32
 #  define Q_OS_WIN64
 #elif !defined(SAG_COM) && (defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__))
