@@ -44,7 +44,6 @@
 
 #include <QtCore/QAbstractEventDispatcher>
 #include <QtCore/QEvent>
-#include <QtCore/QDebug>
 
 #include <QtCore/private/qeventdispatcher_winrt_p.h>
 

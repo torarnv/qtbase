@@ -68,11 +68,12 @@ bool QWinRTEventDispatcher::processEvents(QEventLoop::ProcessEventsFlags flags)
 {
     if (m_dispatcher)
         m_dispatcher->ProcessEvents(CoreProcessEventsOption_ProcessAllIfPresent);
-    foreach (QScreen *screen, qApp->screens())
-        screen->handle()->pageFlipper()->displayBuffer(0);
+
     if (QWindowSystemInterface::sendWindowSystemEvents(flags))
         return true;
+
     if (QEventDispatcherWinRT::processEvents(flags & ~QEventLoop::WaitForMoreEvents))
         return true;
+
     return false;
 }
