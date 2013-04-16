@@ -167,8 +167,12 @@ static bool createFileFromTemplate(NativeFileHandle &file,
 
         DWORD err = GetLastError();
         if (err == ERROR_ACCESS_DENIED) {
-            DWORD attributes = GetFileAttributes((const wchar_t *)path.constData());
-            if (attributes == INVALID_FILE_ATTRIBUTES) {
+            WIN32_FILE_ATTRIBUTE_DATA attributes;
+            if (!GetFileAttributesEx((const wchar_t *)path.constData(),
+                                     GetFileExInfoStandard, &attributes))
+                return false;
+
+            if (attributes.dwFileAttributes == INVALID_FILE_ATTRIBUTES) {
                 // Potential write error (read-only parent directory, etc.).
                 error = QSystemError(err, QSystemError::NativeError);
                 return false;
