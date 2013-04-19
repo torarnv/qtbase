@@ -56,9 +56,12 @@ QWinRTWindow::QWinRTWindow(QWindow *window)
 
 void QWinRTWindow::setGeometry(const QRect &rect)
 {
-    QPlatformWindow::setGeometry(rect);
-
     if (window()->isTopLevel()) {
+        QPlatformWindow::setGeometry(screen()->geometry());
+        QWindowSystemInterface::handleGeometryChange(window(), screen()->geometry());
+        QWindowSystemInterface::handleExposeEvent(window(), screen()->geometry());
+    } else {
+        QPlatformWindow::setGeometry(rect);
         QWindowSystemInterface::handleGeometryChange(window(), rect);
         QWindowSystemInterface::handleExposeEvent(window(), QRect(QPoint(), rect.size()));
     }
