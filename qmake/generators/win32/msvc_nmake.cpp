@@ -109,18 +109,70 @@ NmakeMakefileGenerator::writeMakefile(QTextStream &t)
                     return false;
                 }
             } else if (project->isActiveConfig("winphone")) {
+                QString arch = project->first("VCPROJ_ARCH").toQString();
+                if (arch.compare("arm", Qt::CaseInsensitive) == 0)
+                    arch = "/x86_arm";
+                else
+                    arch.clear();
+
                 QString vcInstallDir = QString::fromLatin1(qgetenv("VCInstallDir"));
-                if (vcInstallDir.isEmpty())
-                    return false;
+                if (vcInstallDir.isEmpty()) {
+                    // Find location of cl.exe to get the implicit WPSDK path
+                    QByteArray pEnv = qgetenv("PATH");
+                    QDir currentDir = QDir::current();
+                    foreach (const QString &path, QString::fromLocal8Bit(pEnv).split(QLatin1Char(';'))) {
+                        if (path.isEmpty())
+                            continue;
+                        if (QFile::exists(currentDir.absoluteFilePath(path + arch + QString::fromLatin1("/cl.exe")))) {
+                            vcInstallDir = QDir::cleanPath(path + QLatin1String("/../"));
+                            break;
+                        }
+                    }
+                }
 
-                QString phoneSdk = vcInstallDir.append("wpsdk\\wp80");
-                QDir phoneSdkDir(phoneSdk);
-                if (!phoneSdkDir.exists())
+                if (vcInstallDir.isEmpty()) {
+                    fprintf(stderr, "Failed to find the Visual Studio installation directory.\n"
+                                    "Check that cl.exe is in your path or that the VCInstallDir\n"
+                                    "environment variable is set.\n");
                     return false;
+                }
 
-                t << "\nINCLUDE = " << phoneSdk << "\\include";
-                t << "\nLIB = " << phoneSdk << "\\lib";
-                t << "\nPATH = " << phoneSdk << "\\bin\n";
+                QString wpSdk = vcInstallDir + QLatin1String("\\WPSDK\\WP80");
+                if (!QDir(wpSdk).exists()) {
+                    fprintf(stderr, "Failed to find the Windows Phone SDK in %s.\n"
+                                    "Check that it is properly installed.\n",
+                            qPrintable(QDir::toNativeSeparators(wpSdk)));
+                    return false;
+                }
+
+                QString wpKit = QDir::cleanPath(vcInstallDir.append("/../../Windows Phone Kits/8.0"));
+                if (!QDir(wpKit).exists()) {
+                    fprintf(stderr, "Failed to find the Windows Phone Kit in %s.\n"
+                                    "Check that it is properly installed.\n",
+                            qPrintable(QDir::toNativeSeparators(wpKit)));
+                    return false;
+                }
+
+                wpSdk = QDir::toNativeSeparators(wpSdk);
+                wpKit = QDir::toNativeSeparators(wpKit);
+                QString wpSdkLib = wpSdk + "\\lib";
+                QString wpKitLib = wpKit + "\\lib";
+                QString wpSdkBin = wpSdk + "\\bin";
+                if (arch == "/x86_arm") {
+                    wpSdkLib += "\\arm";
+                    wpKitLib += "\\ARM";
+                    wpSdkBin += "\\x86_arm";
+                } else {
+                    wpKitLib += "\\x86";
+                }
+                t << "\nINCLUDE = "
+                  << wpSdk << "\\include;"
+                  << wpKit << "\\include;"
+                  << wpKit << "\\include\\abi;"
+                  << wpKit << "\\include\\mincore;"
+                  << wpKit << "\\include\\minwin";
+                t << "\nLIB = " << wpSdkLib << ";" << wpKitLib;
+                t << "\nPATH = " << wpSdkBin << "\n";
             }
         }
         writeNmakeParts(t);
