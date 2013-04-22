@@ -46,7 +46,9 @@
 #include <QRectF>
 
 #include <wrl.h>
+#ifndef Q_OS_WINPHONE
 #include <UIAutomationCore.h>
+#endif
 
 namespace ABI {
     namespace Windows {
@@ -69,7 +71,6 @@ class QWinRTInputContext : public QPlatformInputContext
                            IRawElementProviderSimple, ITextProvider, IValueProvider>
 #endif
 {
-    Q_OBJECT
 public:
     QWinRTInputContext(ABI::Windows::UI::Core::ICoreWindow *window);
 

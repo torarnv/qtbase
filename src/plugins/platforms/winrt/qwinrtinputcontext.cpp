@@ -53,6 +53,11 @@ using namespace ABI::Windows::Foundation;
 using namespace ABI::Windows::UI::ViewManagement;
 using namespace ABI::Windows::UI::Core;
 
+#ifdef Q_OS_WINPHONE
+#include <windows.phone.ui.core.h>
+using namespace ABI::Windows::Phone::UI::Core;
+#endif
+
 typedef ITypedEventHandler<InputPane*, InputPaneVisibilityEventArgs*> InputPaneVisibilityHandler;
 
 QT_BEGIN_NAMESPACE
@@ -146,15 +151,23 @@ void QWinRTInputContext::setKeyboardRect(const QRectF rect)
 
 void QWinRTInputContext::showInputPanel()
 {
-    m_window->put_IsKeyboardInputEnabled(true);
+    ICoreWindowKeyboardInput *input;
+    if (SUCCEEDED(m_window->QueryInterface(IID_PPV_ARGS(&input)))) {
+        input->put_IsKeyboardInputEnabled(true);
+        input->Release();
+    }
 }
 
 void QWinRTInputContext::hideInputPanel()
 {
-    m_window->put_IsKeyboardInputEnabled(false);
+    ICoreWindowKeyboardInput *input;
+    if (SUCCEEDED(m_window->QueryInterface(IID_PPV_ARGS(&input)))) {
+        input->put_IsKeyboardInputEnabled(false);
+        input->Release();
+    }
 }
 
-#else
+#else // Q_OS_WINPHONE
 
 // IRawElementProviderSimple
 HRESULT QWinRTInputContext::get_ProviderOptions(ProviderOptions *retVal)

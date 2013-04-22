@@ -80,7 +80,11 @@ QWinRTScreen::QWinRTScreen(ICoreWindow *window)
     , m_depth(32)
     , m_format(QImage::Format_ARGB32_Premultiplied)
     , m_keyMapper(new QWinRTKeyMapper())
+#ifdef Q_OS_WINPHONE
+    , m_inputContext(new QWinRTInputContext(m_window))
+#else
     , m_inputContext(Make<QWinRTInputContext>(m_window).Detach())
+#endif
     , m_pageFlipper(new QWinRTPageFlipper(window))
     , m_cursor(new QWinRTCursor(window))
 {
@@ -231,7 +235,9 @@ HRESULT QWinRTScreen::onPointerWheelChanged(ICoreWindow *window, IPointerEventAr
 
 HRESULT QWinRTScreen::onAutomationProviderRequested(ICoreWindow *, IAutomationProviderRequestedEventArgs *args)
 {
+#ifndef Q_OS_WINPHONE
     args->put_AutomationProvider(m_inputContext);
+#endif
     return S_OK;
 }
 
