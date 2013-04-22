@@ -16,6 +16,7 @@ SOURCES = \
     main.cpp  \
     pointervalue.cpp \
     qwinrtbackingstore.cpp \
+    qwinrtcursor.cpp \
     qwinrteventdispatcher.cpp \
     qwinrtintegration.cpp \
     qwinrtkeymapper.cpp \
@@ -26,6 +27,7 @@ SOURCES = \
 HEADERS = \
     pointervalue.h \
     qwinrtbackingstore.h \
+    qwinrtcursor.h \
     qwinrteventdispatcher.h \
     qwinrtintegration.h \
     qwinrtkeymapper.h \

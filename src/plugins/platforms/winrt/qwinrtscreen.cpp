@@ -44,6 +44,7 @@
 #include "qwinrtbackingstore.h"
 #include "qwinrtkeymapper.h"
 #include "qwinrtpageflipper.h"
+#include "qwinrtcursor.h"
 #include "pointervalue.h"
 #include <qpa/qwindowsysteminterface.h>
 
@@ -78,6 +79,7 @@ QWinRTScreen::QWinRTScreen(ICoreWindow *window)
     , m_format(QImage::Format_ARGB32_Premultiplied)
     , m_keyMapper(new QWinRTKeyMapper())
     , m_pageFlipper(new QWinRTPageFlipper(window))
+    , m_cursor(new QWinRTCursor(window))
 {
     // TODO: query touch device capabilities
     m_touchDevice.setCapabilities(QTouchDevice::Position | QTouchDevice::Area);
@@ -127,6 +129,11 @@ QImage::Format QWinRTScreen::format() const
 QPlatformScreenPageFlipper *QWinRTScreen::pageFlipper() const
 {
     return m_pageFlipper;
+}
+
+QPlatformCursor *QWinRTScreen::cursor() const
+{
+    return m_cursor;
 }
 
 void QWinRTScreen::update(const QRegion &region, const QPoint &offset, const void *handle, int stride)

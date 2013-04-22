@@ -69,6 +69,7 @@ QT_BEGIN_NAMESPACE
 
 class QWinRTKeyMapper;
 class QWinRTPageFlipper;
+class QWinRTCursor;
 
 class QWinRTScreen : public QPlatformScreen
 {
@@ -78,6 +79,8 @@ public:
     int depth() const;
     QImage::Format format() const;
     QPlatformScreenPageFlipper *pageFlipper() const;
+    QPlatformCursor *cursor() const;
+
     void update(const QRegion &region, const QPoint &offset, const void *handle, int stride);
 
 private:
@@ -109,6 +112,7 @@ private:
     int m_depth;
     QWinRTKeyMapper *m_keyMapper;
     QWinRTPageFlipper *m_pageFlipper;
+    QWinRTCursor *m_cursor;
 };
 
 QT_END_NAMESPACE
