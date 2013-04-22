@@ -75,21 +75,12 @@ win32 {
         HEADERS += \
                 kernel/qwineventnotifier.h
 
-        !winrt {
-            SOURCES += kernel/qeventdispatcher_win.cpp
-
-            HEADERS += kernel/qeventdispatcher_win_p.h
+        winrt {
+            SOURCES += kernel/qeventdispatcher_winrt.cpp
+            HEADERS += kernel/qeventdispatcher_winrt_p.h
         } else {
-            SOURCES += \
-                kernel/qtimerinfo_unix.cpp \
-                kernel/qeventdispatcher_winrt_desktop.cpp \
-                kernel/qeventdispatcher_winrt_phone.cpp
-
-            HEADERS += \
-                kernel/qtimerinfo_unix_p.h \
-                kernel/qeventdispatcher_winrt_p.h \
-                kernel/qeventdispatcher_winrt_desktop_p.h \
-                kernel/qeventdispatcher_winrt_phone_p.h
+            SOURCES += kernel/qeventdispatcher_win.cpp
+            HEADERS += kernel/qeventdispatcher_win_p.h
         }
 }
 

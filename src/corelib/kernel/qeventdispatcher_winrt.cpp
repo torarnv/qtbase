@@ -39,18 +39,25 @@
 **
 ****************************************************************************/
 
-#ifndef Q_OS_WINPHONE
-#include "qeventdispatcher_winrt_desktop_p.h"
+#include "qeventdispatcher_winrt_p.h"
 
 #include "qelapsedtimer.h"
 #include "qcoreapplication.h"
 #include "qthread.h"
+#include "qsocketnotifier.h"
 
 #include <private/qcoreapplication_p.h>
 #include <private/qthread_p.h>
 
-using namespace Windows::System::Threading;
-using namespace Windows::Foundation;
+#include "WinSock2.h"
+
+#include <wrl.h>
+#include <windows.foundation.h>
+#include <windows.system.threading.h>
+using namespace Microsoft::WRL;
+using namespace Microsoft::WRL::Wrappers;
+using namespace ABI::Windows::System::Threading;
+using namespace ABI::Windows::Foundation;
 
 QT_BEGIN_NAMESPACE
 
@@ -70,10 +77,53 @@ QEventDispatcherWinRT::~QEventDispatcherWinRT()
 
 bool QEventDispatcherWinRT::processEvents(QEventLoop::ProcessEventsFlags flags)
 {
-    Q_UNUSED(flags)
     // we are awake, broadcast it
     emit awake();
     QCoreApplicationPrivate::sendPostedEvents(0, 0, QThreadData::current());
+
+#ifdef Q_OS_WINPHONE
+    Q_D(QEventDispatcherWinRT);
+    if (!(flags & QEventLoop::ExcludeSocketNotifiers)) {
+        QSNDict *sn_vec[3] = { &d->sn_read, &d->sn_write, &d->sn_except };
+        for (int i = 0; i < 3; ++i) foreach (int fd, sn_vec[i]->keys()) {
+            WSANETWORKEVENTS networkEvents;
+            while (WSAEnumNetworkEvents(fd, 0, &networkEvents) != 0) {
+                int type = -1;
+                switch (WSAGETSELECTEVENT(networkEvents.lNetworkEvents)) {
+                case FD_READ:
+                case FD_ACCEPT:
+                    type = 0;
+                    break;
+                case FD_WRITE:
+                case FD_CONNECT:
+                    type = 1;
+                    break;
+                case FD_OOB:
+                    type = 2;
+                    break;
+                case FD_CLOSE:
+                    type = 3;
+                    break;
+                }
+                if (type >= 0) {
+                    Q_ASSERT(d != 0);
+                    QSNDict *sn_vec[4] = { &d->sn_read, &d->sn_write, &d->sn_except, &d->sn_read };
+                    QSNDict *dict = sn_vec[type];
+                    QSockNot *sn = dict ? dict->value(fd) : 0;
+                    if (sn) {
+                        if (type < 3) {
+                            QEvent event(QEvent::SockAct);
+                            QCoreApplication::sendEvent(sn->obj, &event);
+                        } else {
+                            QEvent event(QEvent::SockClose);
+                            QCoreApplication::sendEvent(sn->obj, &event);
+                        }
+                    }
+                }
+            }
+        }
+    }
+#endif
 
     return false;
 }
@@ -85,11 +135,74 @@ bool QEventDispatcherWinRT::hasPendingEvents()
 
 void QEventDispatcherWinRT::registerSocketNotifier(QSocketNotifier *notifier)
 {
+#ifdef Q_OS_WINPHONE
+    Q_ASSERT(notifier);
+    int sockfd = notifier->socket();
+    int type = notifier->type();
+#ifndef QT_NO_DEBUG
+    if (sockfd < 0) {
+        qWarning("QSocketNotifier: Internal error");
+        return;
+    } else if (notifier->thread() != thread() || thread() != QThread::currentThread()) {
+        qWarning("QSocketNotifier: socket notifiers cannot be enabled from another thread");
+        return;
+    }
+#endif
+
+    Q_D(QEventDispatcherWinRT);
+    QSNDict *sn_vec[3] = { &d->sn_read, &d->sn_write, &d->sn_except };
+    QSNDict *dict = sn_vec[type];
+
+    if (QCoreApplication::closingDown()) // ### d->exitloop?
+        return; // after sn_cleanup, don't reinitialize.
+
+    if (dict->contains(sockfd)) {
+        const char *t[] = { "Read", "Write", "Exception" };
+        /* Variable "socket" below is a function pointer. */
+        qWarning("QSocketNotifier: Multiple socket notifiers for "
+                 "same socket %d and type %s", sockfd, t[type]);
+    }
+
+    QSockNot *sn = new QSockNot;
+    sn->obj = notifier;
+    sn->fd  = sockfd;
+    dict->insert(sn->fd, sn);
+
+    d->doWsaEventSelect(sockfd);
+#else
     Q_UNUSED(notifier);
+#endif
 }
 void QEventDispatcherWinRT::unregisterSocketNotifier(QSocketNotifier *notifier)
 {
+#ifdef Q_OS_WINPHONE
+    Q_ASSERT(notifier);
+    int sockfd = notifier->socket();
+    int type = notifier->type();
+#ifndef QT_NO_DEBUG
+    if (sockfd < 0) {
+        qWarning("QSocketNotifier: Internal error");
+        return;
+    } else if (notifier->thread() != thread() || thread() != QThread::currentThread()) {
+        qWarning("QSocketNotifier: socket notifiers cannot be disabled from another thread");
+        return;
+    }
+#endif
+
+    Q_D(QEventDispatcherWinRT);
+    QSNDict *sn_vec[3] = { &d->sn_read, &d->sn_write, &d->sn_except };
+    QSNDict *dict = sn_vec[type];
+    QSockNot *sn = dict->value(sockfd);
+    if (!sn)
+        return;
+
+    dict->remove(sockfd);
+    delete sn;
+
+    d->doWsaEventSelect(sockfd);
+#else
     Q_UNUSED(notifier);
+#endif
 }
 
 void QEventDispatcherWinRT::registerTimer(int timerId, int interval, Qt::TimerType timerType, QObject *object)
@@ -119,6 +232,7 @@ void QEventDispatcherWinRT::registerTimer(int timerId, int interval, Qt::TimerTy
     d->timerVec.append(t);                      // store in timer vector
     d->timerDict.insert(t->timerId, t);          // store timers in dict
 }
+
 bool QEventDispatcherWinRT::unregisterTimer(int timerId)
 {
     if (timerId < 1) {
@@ -144,6 +258,7 @@ bool QEventDispatcherWinRT::unregisterTimer(int timerId)
     d->unregisterTimer(t);
     return true;
 }
+
 bool QEventDispatcherWinRT::unregisterTimers(QObject *object)
 {
     if (!object) {
@@ -171,6 +286,7 @@ bool QEventDispatcherWinRT::unregisterTimers(QObject *object)
     }
     return true;
 }
+
 QList<QAbstractEventDispatcher::TimerInfo> QEventDispatcherWinRT::registeredTimers(QObject *object) const
 {
     if (!object) {
@@ -193,6 +309,7 @@ bool QEventDispatcherWinRT::registerEventNotifier(QWinEventNotifier *notifier)
     Q_UNUSED(notifier);
     return false;
 }
+
 void QEventDispatcherWinRT::unregisterEventNotifier(QWinEventNotifier *notifier)
 {
     Q_UNUSED(notifier);
@@ -236,12 +353,19 @@ int QEventDispatcherWinRT::remainingTime(int timerId)
 
 void QEventDispatcherWinRT::wakeUp()
 {
-
+    Q_D(QEventDispatcherWinRT);
+    if (d->wakeUps.testAndSetAcquire(0, 1)) {
+        // now what?
+    }
 }
+
 void QEventDispatcherWinRT::interrupt()
 {
-
+    Q_D(QEventDispatcherWinRT);
+    d->interrupt = true;
+    wakeUp();
 }
+
 void QEventDispatcherWinRT::flush()
 {
 
@@ -249,11 +373,21 @@ void QEventDispatcherWinRT::flush()
 
 void QEventDispatcherWinRT::startingUp()
 {
+
 }
 
 void QEventDispatcherWinRT::closingDown()
 {
     Q_D(QEventDispatcherWinRT);
+
+    // clean up any socketnotifiers
+    while (!d->sn_read.isEmpty())
+        unregisterSocketNotifier((*(d->sn_read.begin()))->obj);
+    while (!d->sn_write.isEmpty())
+        unregisterSocketNotifier((*(d->sn_write.begin()))->obj);
+    while (!d->sn_except.isEmpty())
+        unregisterSocketNotifier((*(d->sn_except.begin()))->obj);
+
     // clean up any timers
     for (int i = 0; i < d->timerVec.count(); ++i)
         d->unregisterTimer(d->timerVec.at(i));
@@ -291,12 +425,14 @@ bool QEventDispatcherWinRT::event(QEvent *e)
     return QAbstractEventDispatcher::event(e);
 }
 
-QEventDispatcherWinRTPrivate::QEventDispatcherWinRTPrivate()
+QEventDispatcherWinRTPrivate::QEventDispatcherWinRTPrivate() : interrupt(false)
 {
+    GetActivationFactory(HString::MakeReference(RuntimeClass_Windows_System_Threading_ThreadPoolTimer).Get(), &timerFactory);
 }
 
 QEventDispatcherWinRTPrivate::~QEventDispatcherWinRTPrivate()
 {
+    timerFactory->Release();
 }
 
 void QEventDispatcherWinRTPrivate::registerTimer(WinRTTimerInfo *t)
@@ -312,33 +448,24 @@ void QEventDispatcherWinRTPrivate::registerTimer(WinRTTimerInfo *t)
         QCoreApplication::postEvent(q, new QZeroTimerEvent(t->timerId));
         ok = 1;
     } else {
-        if (t->timer = ThreadPoolTimer::CreatePeriodicTimer(
-                    ref new TimerElapsedHandler([this](ThreadPoolTimer ^source)
-        {
-            for (int i = 0; i < timerVec.size(); ++i) {
-                const WinRTTimerInfo *t = timerVec.at(i);
-                if (t && t->timer == source) {
-                    if (!t->timerId) // sanity check
-                        return;
-                    Q_ASSERT(t);
-                    QCoreApplication::postEvent(t->dispatcher, new QTimerEvent(t->timerId));
-                    break;
-                }
-            }
-        }), period))
-            ok = 1;
+        ok = SUCCEEDED(timerFactory->CreatePeriodicTimer(
+                           Callback<ITimerElapsedHandler>([t](IThreadPoolTimer *source) {
+                               Q_ASSERT(t->timer == source);
+                               QCoreApplication::postEvent(t->dispatcher, new QTimerEvent(t->timerId));
+                               return S_OK;
+                           }).Get(), period, &t->timer));
     }
     t->timeout = qt_msectime() + interval;
-
-
     if (ok == 0)
         qErrnoWarning("QEventDispatcherWinRT::registerTimer: Failed to create a timer");
 }
 
 void QEventDispatcherWinRTPrivate::unregisterTimer(WinRTTimerInfo *t)
 {
-    if (t->timer)
+    if (t->timer) {
         t->timer->Cancel();
+        t->timer->Release();
+    }
     delete t;
 }
 
@@ -360,5 +487,18 @@ void QEventDispatcherWinRTPrivate::sendTimerEvent(int timerId)
     }
 }
 
+void QEventDispatcherWinRTPrivate::doWsaEventSelect(int socket)
+{
+#ifdef Q_OS_WINPHONE
+    int sn_event = 0;
+    if (sn_read.contains(socket))
+        sn_event |= FD_READ | FD_CLOSE | FD_ACCEPT;
+    if (sn_write.contains(socket))
+        sn_event |= FD_WRITE | FD_CONNECT;
+    if (sn_except.contains(socket))
+        sn_event |= FD_OOB;
+    WSAEventSelect(socket, WSACreateEvent(), sn_event);
+#endif
+}
+
 QT_END_NAMESPACE
-#endif // !Q_OS_WINPHONE

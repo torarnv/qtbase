@@ -3,7 +3,7 @@
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the qmake spec of the Qt Toolkit.
+** This file is part of the QtCore module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -39,6 +39,7 @@
 **
 ****************************************************************************/
 
+
 #ifndef QEVENTDISPATCHER_WINRT_P_H
 #define QEVENTDISPATCHER_WINRT_P_H
 
@@ -53,10 +54,120 @@
 // We mean it.
 //
 
-#ifdef Q_OS_WINPHONE
-#  include "qeventdispatcher_winrt_phone_p.h"
-#else
-#  include "qeventdispatcher_winrt_desktop_p.h"
-#endif
+#include "QtCore/qabstracteventdispatcher.h"
+#include "private/qabstracteventdispatcher_p.h"
+
+namespace ABI {
+    namespace Windows {
+        namespace System {
+            namespace Threading {
+                struct IThreadPoolTimer;
+                struct IThreadPoolTimerStatics;
+            }
+        }
+    }
+}
+
+QT_BEGIN_NAMESPACE
+
+int qt_msectime();
+
+class QEventDispatcherWinRTPrivate;
+
+class Q_CORE_EXPORT QEventDispatcherWinRT : public QAbstractEventDispatcher
+{
+    Q_OBJECT
+    Q_DECLARE_PRIVATE(QEventDispatcherWinRT)
+
+public:
+    explicit QEventDispatcherWinRT(QObject *parent = 0);
+    ~QEventDispatcherWinRT();
+
+    bool processEvents(QEventLoop::ProcessEventsFlags flags);
+    bool hasPendingEvents();
+
+    void registerSocketNotifier(QSocketNotifier *notifier);
+    void unregisterSocketNotifier(QSocketNotifier *notifier);
+
+    void registerTimer(int timerId, int interval, Qt::TimerType timerType, QObject *object);
+    bool unregisterTimer(int timerId);
+    bool unregisterTimers(QObject *object);
+    QList<TimerInfo> registeredTimers(QObject *object) const;
+
+    int remainingTime(int timerId);
+
+    bool registerEventNotifier(QWinEventNotifier *notifier);
+    void unregisterEventNotifier(QWinEventNotifier *notifier);
+
+    void wakeUp();
+    void interrupt();
+    void flush();
+
+    void startingUp();
+    void closingDown();
+
+protected:
+    QEventDispatcherWinRT(QEventDispatcherWinRTPrivate &dd, QObject *parent = 0);
+
+
+    bool event(QEvent *);
+    int activateTimers();
+    int activateSocketNotifiers();
+};
+
+struct WinRTTimerInfo                           // internal timer info
+{
+    QObject *dispatcher;
+    int timerId;
+    int interval;
+    Qt::TimerType timerType;
+    quint64 timeout;                            // - when to actually fire
+    QObject *obj;                               // - object to receive events
+    bool inTimerEvent;
+    ABI::Windows::System::Threading::IThreadPoolTimer *timer;
+};
+
+class QZeroTimerEvent : public QTimerEvent
+{
+public:
+    explicit inline QZeroTimerEvent(int timerId)
+        : QTimerEvent(timerId)
+    { t = QEvent::ZeroTimerEvent; }
+};
+
+struct QSockNot {
+    QSocketNotifier *obj;
+    int fd;
+};
+typedef QHash<int, QSockNot *> QSNDict;
+
+class Q_CORE_EXPORT QEventDispatcherWinRTPrivate : public QAbstractEventDispatcherPrivate
+{
+    Q_DECLARE_PUBLIC(QEventDispatcherWinRT)
+
+public:
+    QEventDispatcherWinRTPrivate();
+    ~QEventDispatcherWinRTPrivate();
+
+    QList<WinRTTimerInfo*> timerVec;
+    QHash<int, WinRTTimerInfo*> timerDict;
+
+    void registerTimer(WinRTTimerInfo *t);
+    void unregisterTimer(WinRTTimerInfo *t);
+    void sendTimerEvent(int timerId);
+
+    // socket notifiers
+    QSNDict sn_read;
+    QSNDict sn_write;
+    QSNDict sn_except;
+    void doWsaEventSelect(int socket);
+
+    QAtomicInt wakeUps;
+    bool interrupt;
+
+    ABI::Windows::System::Threading::IThreadPoolTimerStatics *timerFactory;
+};
+
+QT_END_NAMESPACE
 
 #endif // QEVENTDISPATCHER_WINRT_P_H
