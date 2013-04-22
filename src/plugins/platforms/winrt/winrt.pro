@@ -18,6 +18,7 @@ SOURCES = \
     qwinrtbackingstore.cpp \
     qwinrtcursor.cpp \
     qwinrteventdispatcher.cpp \
+    qwinrtinputcontext.cpp \
     qwinrtintegration.cpp \
     qwinrtkeymapper.cpp \
     qwinrtpageflipper.cpp \
@@ -29,6 +30,7 @@ HEADERS = \
     qwinrtbackingstore.h \
     qwinrtcursor.h \
     qwinrteventdispatcher.h \
+    qwinrtinputcontext.h \
     qwinrtintegration.h \
     qwinrtkeymapper.h \
     qwinrtpageflipper.h \

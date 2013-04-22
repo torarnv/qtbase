@@ -44,6 +44,7 @@
 #include "qwinrteventdispatcher.h"
 #include "qwinrtbackingstore.h"
 #include "qwinrtscreen.h"
+#include "qwinrtinputcontext.h"
 
 #include <QtPlatformSupport/private/qbasicfontdatabase_p.h>
 
@@ -76,7 +77,8 @@ QWinRTIntegration::QWinRTIntegration()
     if (FAILED(view->get_CoreWindow(&window)))
         qFatal("Could not obtain the application window - have you started outside of WinRT?");
     window->Activate();
-    screenAdded(new QWinRTScreen(window));
+    m_screen = new QWinRTScreen(window);
+    screenAdded(m_screen);
 
     // Get event dispatcher
     ICoreDispatcher *dispatcher;
@@ -122,6 +124,11 @@ QPlatformBackingStore *QWinRTIntegration::createPlatformBackingStore(QWindow *wi
 QPlatformFontDatabase *QWinRTIntegration::fontDatabase() const
 {
     return m_fontDatabase;
+}
+
+QPlatformInputContext *QWinRTIntegration::inputContext() const
+{
+    return m_screen->inputContext();
 }
 
 QT_END_NAMESPACE

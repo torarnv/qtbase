@@ -53,6 +53,7 @@ namespace ABI {
 namespace Windows {
 namespace UI {
 namespace Core {
+struct IAutomationProviderRequestedEventArgs;
 struct ICoreWindow;
 struct ICoreWindowEventArgs;
 struct IKeyEventArgs;
@@ -70,6 +71,7 @@ QT_BEGIN_NAMESPACE
 class QWinRTKeyMapper;
 class QWinRTPageFlipper;
 class QWinRTCursor;
+class QWinRTInputContext;
 
 class QWinRTScreen : public QPlatformScreen
 {
@@ -78,6 +80,8 @@ public:
     QRect geometry() const;
     int depth() const;
     QImage::Format format() const;
+    QWinRTInputContext *inputContext() const;
+
     QPlatformScreenPageFlipper *pageFlipper() const;
     QPlatformCursor *cursor() const;
 
@@ -104,6 +108,7 @@ private:
     HRESULT onActivated(ABI::Windows::UI::Core::ICoreWindow *, ABI::Windows::UI::Core::IWindowActivatedEventArgs *args);
     HRESULT onClosed(ABI::Windows::UI::Core::ICoreWindow *, ABI::Windows::UI::Core::ICoreWindowEventArgs *args);
     HRESULT onVisibilityChanged(ABI::Windows::UI::Core::ICoreWindow *, ABI::Windows::UI::Core::IVisibilityChangedEventArgs *args);
+    HRESULT onAutomationProviderRequested(ABI::Windows::UI::Core::ICoreWindow *, ABI::Windows::UI::Core::IAutomationProviderRequestedEventArgs *args);
 
     ABI::Windows::UI::Core::ICoreWindow *m_window;
     QTouchDevice m_touchDevice;
@@ -111,6 +116,7 @@ private:
     QImage::Format m_format;
     int m_depth;
     QWinRTKeyMapper *m_keyMapper;
+    QWinRTInputContext *m_inputContext;
     QWinRTPageFlipper *m_pageFlipper;
     QWinRTCursor *m_cursor;
 };

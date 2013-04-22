@@ -47,6 +47,7 @@
 QT_BEGIN_NAMESPACE
 
 class QAbstractEventDispatcher;
+class QWinRTScreen;
 
 class QWinRTIntegration : public QPlatformIntegration
 {
@@ -60,10 +61,12 @@ public:
     QPlatformBackingStore *createPlatformBackingStore(QWindow *window) const;
     QAbstractEventDispatcher *guiThreadEventDispatcher() const;
     QPlatformFontDatabase *fontDatabase() const;
+    QPlatformInputContext *inputContext() const;
 
 private:
     QAbstractEventDispatcher *m_eventDispatcher;
     QPlatformFontDatabase *m_fontDatabase;
+    QWinRTScreen *m_screen;
 };
 
 QT_END_NAMESPACE

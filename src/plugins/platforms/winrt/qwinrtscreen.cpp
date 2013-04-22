@@ -43,6 +43,7 @@
 #include "qwinrtscreen.h"
 #include "qwinrtbackingstore.h"
 #include "qwinrtkeymapper.h"
+#include "qwinrtinputcontext.h"
 #include "qwinrtpageflipper.h"
 #include "qwinrtcursor.h"
 #include "pointervalue.h"
@@ -72,12 +73,14 @@ typedef ITypedEventHandler<CoreWindow*, KeyEventArgs*> KeyHandler;
 typedef ITypedEventHandler<CoreWindow*, PointerEventArgs*> PointerHandler;
 typedef ITypedEventHandler<CoreWindow*, WindowSizeChangedEventArgs*> SizeChangedHandler;
 typedef ITypedEventHandler<CoreWindow*, VisibilityChangedEventArgs*> VisibilityChangedHandler;
+typedef ITypedEventHandler<CoreWindow*, AutomationProviderRequestedEventArgs*> AutomationProviderRequestedHandler;
 
 QWinRTScreen::QWinRTScreen(ICoreWindow *window)
     : m_window(window)
     , m_depth(32)
     , m_format(QImage::Format_ARGB32_Premultiplied)
     , m_keyMapper(new QWinRTKeyMapper())
+    , m_inputContext(Make<QWinRTInputContext>(m_window).Detach())
     , m_pageFlipper(new QWinRTPageFlipper(window))
     , m_cursor(new QWinRTCursor(window))
 {
@@ -109,6 +112,7 @@ QWinRTScreen::QWinRTScreen(ICoreWindow *window)
     m_window->add_Activated(Callback<ActivatedHandler>(this, &QWinRTScreen::onActivated).Get(), &m_tokens[QEvent::WindowActivate]);
     m_window->add_Closed(Callback<ClosedHandler>(this, &QWinRTScreen::onClosed).Get(), &m_tokens[QEvent::WindowDeactivate]);
     m_window->add_VisibilityChanged(Callback<VisibilityChangedHandler>(this, &QWinRTScreen::onVisibilityChanged).Get(), &m_tokens[QEvent::Show]);
+    m_window->add_AutomationProviderRequested(Callback<AutomationProviderRequestedHandler>(this, &QWinRTScreen::onAutomationProviderRequested).Get(), &m_tokens[QEvent::InputMethodQuery]);
 }
 
 QRect QWinRTScreen::geometry() const
@@ -124,6 +128,11 @@ int QWinRTScreen::depth() const
 QImage::Format QWinRTScreen::format() const
 {
     return m_format;
+}
+
+QWinRTInputContext *QWinRTScreen::inputContext() const
+{
+    return m_inputContext;
 }
 
 QPlatformScreenPageFlipper *QWinRTScreen::pageFlipper() const
@@ -217,6 +226,12 @@ HRESULT QWinRTScreen::onPointerWheelChanged(ICoreWindow *window, IPointerEventAr
     PointerValue point(args);
     QPointF pos = point.pos();
     QWindowSystemInterface::handleWheelEvent(0, pos, pos, point.delta(), point.orientation(), point.modifiers());
+    return S_OK;
+}
+
+HRESULT QWinRTScreen::onAutomationProviderRequested(ICoreWindow *, IAutomationProviderRequestedEventArgs *args)
+{
+    args->put_AutomationProvider(m_inputContext);
     return S_OK;
 }
 
