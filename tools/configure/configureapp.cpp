@@ -1621,6 +1621,8 @@ void Configure::applySpecSpecifics()
         dictionary[ "CE_CRT" ]              = "yes";
         dictionary[ "LARGE_FILE" ]          = "no";
         dictionary[ "ANGLE" ]               = "no";
+        if (dictionary.value("XQMAKESPEC").startsWith("winphone"))
+            dictionary[ "SQL_SQLITE" ] = "no";
     } else if (dictionary.value("XQMAKESPEC").startsWith("wince")) {
         dictionary[ "STYLE_WINDOWSXP" ]     = "no";
         dictionary[ "STYLE_WINDOWSVISTA" ]  = "no";
