@@ -115,25 +115,22 @@ NmakeMakefileGenerator::writeMakefile(QTextStream &t)
                 else
                     arch.clear();
 
-                QString vcInstallDir = QString::fromLatin1(qgetenv("VCInstallDir"));
-                if (vcInstallDir.isEmpty()) {
-                    // Find location of cl.exe to get the implicit WPSDK path
-                    QByteArray pEnv = qgetenv("PATH");
-                    QDir currentDir = QDir::current();
-                    foreach (const QString &path, QString::fromLocal8Bit(pEnv).split(QLatin1Char(';'))) {
-                        if (path.isEmpty())
-                            continue;
-                        if (QFile::exists(currentDir.absoluteFilePath(path + arch + QString::fromLatin1("/cl.exe")))) {
-                            vcInstallDir = QDir::cleanPath(path + QLatin1String("/../"));
-                            break;
-                        }
+                QStringList paths = QString::fromLocal8Bit(qgetenv("PATH")).split(QLatin1Char(';'));
+
+                // Find location of cl.exe to get the implicit WPSDK path
+                QString vcInstallDir;
+                foreach (const QString &path, paths) {
+                    if (path.isEmpty())
+                        continue;
+                    if (QFile::exists(path + arch + QString::fromLatin1("/cl.exe"))) {
+                        vcInstallDir = QDir::cleanPath(path + QLatin1String("/../"));
+                        break;
                     }
                 }
 
                 if (vcInstallDir.isEmpty()) {
                     fprintf(stderr, "Failed to find the Visual Studio installation directory.\n"
-                                    "Check that cl.exe is in your path or that the VCInstallDir\n"
-                                    "environment variable is set.\n");
+                                    "Check that cl.exe is in your path.\n");
                     return false;
                 }
 
@@ -151,6 +148,17 @@ NmakeMakefileGenerator::writeMakefile(QTextStream &t)
                                     "Check that it is properly installed.\n",
                             qPrintable(QDir::toNativeSeparators(wpKit)));
                     return false;
+                }
+
+                // If fxc.exe is available, also keep it in the path
+                QString fxc;
+                foreach (const QString &path, paths) {
+                    if (path.isEmpty())
+                        continue;
+                    if (QFile::exists(path + QStringLiteral("/fxc.exe"))) {
+                        fxc = QDir::toNativeSeparators(QDir::cleanPath(path));
+                        break;
+                    }
                 }
 
                 wpSdk = QDir::toNativeSeparators(wpSdk);
@@ -171,8 +179,8 @@ NmakeMakefileGenerator::writeMakefile(QTextStream &t)
                   << wpKit << "\\include\\abi;"
                   << wpKit << "\\include\\mincore;"
                   << wpKit << "\\include\\minwin";
-                t << "\nLIB = " << wpSdkLib << ";" << wpKitLib;
-                t << "\nPATH = " << wpSdkBin << "\n";
+                t << "\nLIB = " << wpSdkLib << ';' << wpKitLib;
+                t << "\nPATH = " << wpSdkBin << ';' << fxc << '\n';
             }
         }
         writeNmakeParts(t);
