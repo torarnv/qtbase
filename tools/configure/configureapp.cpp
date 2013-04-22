@@ -4298,7 +4298,7 @@ int Configure::platform() const
     const QString qMakeSpec = dictionary.value("QMAKESPEC");
     const QString xQMakeSpec = dictionary.value("XQMAKESPEC");
 
-    if ((qMakeSpec.startsWith("winphone") || xQMakeSpec.startsWith("winrt")))
+    if ((xQMakeSpec.startsWith("winphone") || xQMakeSpec.startsWith("winrt")))
         return WINDOWS_RT;
 
     if ((qMakeSpec.startsWith("wince") || xQMakeSpec.startsWith("wince")))
