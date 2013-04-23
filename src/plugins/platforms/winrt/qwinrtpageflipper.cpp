@@ -177,6 +177,9 @@ void QWinRTPageFlipper::present()
     // to sleep until the next VSync. This ensures we don't waste any cycles rendering
     // frames that will never be displayed to the screen.
     HRESULT hr;
+#ifdef Q_OS_WINPHONE
+    hr = m_swapChain->Present(1, 0); // No dirty region support on phone
+#else
     if (m_dirtyRegion == m_windowBounds) {
         hr = m_swapChain->Present(1, 0);
     } else {
@@ -191,6 +194,7 @@ void QWinRTPageFlipper::present()
 
     // Clear the dirty tracker
     m_dirtyRegion = QRegion();
+#endif // Q_OS_WINPHONE
 
     // If the device was removed either by a disconnect or a driver upgrade, we
     // must recreate all device resources.
