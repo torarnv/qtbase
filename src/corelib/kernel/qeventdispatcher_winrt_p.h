@@ -57,6 +57,9 @@
 #include "QtCore/qabstracteventdispatcher.h"
 #include "private/qabstracteventdispatcher_p.h"
 
+#include <qt_windows.h>
+#include <wrl.h>
+
 namespace ABI {
     namespace Windows {
         namespace System {
@@ -117,6 +120,8 @@ protected:
 
 struct WinRTTimerInfo                           // internal timer info
 {
+    WinRTTimerInfo() : timer(0) {}
+
     QObject *dispatcher;
     int timerId;
     int interval;
@@ -151,10 +156,12 @@ public:
 
     QList<WinRTTimerInfo*> timerVec;
     QHash<int, WinRTTimerInfo*> timerDict;
+    QHash<ABI::Windows::System::Threading::IThreadPoolTimer*, WinRTTimerInfo*> threadPoolTimerDict;
 
     void registerTimer(WinRTTimerInfo *t);
     void unregisterTimer(WinRTTimerInfo *t);
     void sendTimerEvent(int timerId);
+    HRESULT timerExpiredCallback(ABI::Windows::System::Threading::IThreadPoolTimer *source);
 
     // socket notifiers
     QSNDict sn_read;
