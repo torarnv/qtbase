@@ -14,7 +14,6 @@ winrt:QMAKE_CXXFLAGS += -ZW -EHsc
 
 SOURCES = \
     main.cpp  \
-    pointervalue.cpp \
     qwinrtbackingstore.cpp \
     qwinrtcursor.cpp \
     qwinrteventdispatcher.cpp \
@@ -26,7 +25,6 @@ SOURCES = \
     qwinrtwindow.cpp
 
 HEADERS = \
-    pointervalue.h \
     qwinrtbackingstore.h \
     qwinrtcursor.h \
     qwinrteventdispatcher.h \

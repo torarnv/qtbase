@@ -43,9 +43,9 @@
 #define QWINRTSCREEN_H
 
 #include <qpa/qplatformscreen.h>
+#include <qpa/qwindowsysteminterface.h>
 
 #include <QtCore/QHash>
-#include <QtGui/QTouchDevice>
 
 #include <EventToken.h>
 
@@ -74,10 +74,17 @@ struct IInspectable;
 
 QT_BEGIN_NAMESPACE
 
+class QTouchDevice;
 class QWinRTKeyMapper;
 class QWinRTPageFlipper;
 class QWinRTCursor;
 class QWinRTInputContext;
+
+struct Pointer {
+    enum Type { Unknown, Mouse, TouchScreen, Tablet };
+    Type type;
+    QTouchDevice *device;
+};
 
 class QWinRTScreen : public QPlatformScreen
 {
@@ -98,9 +105,7 @@ public:
 
 private:
     HRESULT handleKeyEvent(ABI::Windows::UI::Core::ICoreWindow *window, ABI::Windows::UI::Core::IKeyEventArgs *args);
-    HRESULT handlePointerEvent(Qt::TouchPointState pointState, ABI::Windows::UI::Core::ICoreWindow *window, ABI::Windows::UI::Core::IPointerEventArgs *args);
 
-private:
     // Event handlers
     QHash<QEvent::Type, EventRegistrationToken> m_tokens;
 
@@ -108,10 +113,7 @@ private:
     HRESULT onKeyUp(ABI::Windows::UI::Core::ICoreWindow *window, ABI::Windows::UI::Core::IKeyEventArgs *args);
     HRESULT onPointerEntered(ABI::Windows::UI::Core::ICoreWindow *window, ABI::Windows::UI::Core::IPointerEventArgs *args);
     HRESULT onPointerExited(ABI::Windows::UI::Core::ICoreWindow *window, ABI::Windows::UI::Core::IPointerEventArgs *args);
-    HRESULT onPointerPressed(ABI::Windows::UI::Core::ICoreWindow *window, ABI::Windows::UI::Core::IPointerEventArgs *args);
-    HRESULT onPointerMoved(ABI::Windows::UI::Core::ICoreWindow *window, ABI::Windows::UI::Core::IPointerEventArgs *args);
-    HRESULT onPointerReleased(ABI::Windows::UI::Core::ICoreWindow *window, ABI::Windows::UI::Core::IPointerEventArgs *args);
-    HRESULT onPointerWheelChanged(ABI::Windows::UI::Core::ICoreWindow *window, ABI::Windows::UI::Core::IPointerEventArgs *args);
+    HRESULT onPointerUpdated(ABI::Windows::UI::Core::ICoreWindow *window, ABI::Windows::UI::Core::IPointerEventArgs *args);
     HRESULT onSizeChanged(ABI::Windows::UI::Core::ICoreWindow *window, ABI::Windows::UI::Core::IWindowSizeChangedEventArgs *args);
 
     HRESULT onActivated(ABI::Windows::UI::Core::ICoreWindow *, ABI::Windows::UI::Core::IWindowActivatedEventArgs *args);
@@ -122,18 +124,20 @@ private:
     HRESULT onOrientationChanged(IInspectable *);
 
     ABI::Windows::UI::Core::ICoreWindow *m_window;
-    QTouchDevice m_touchDevice;
     QRect m_geometry;
     QImage::Format m_format;
     int m_depth;
     QWinRTKeyMapper *m_keyMapper;
     QWinRTInputContext *m_inputContext;
-    QWinRTPageFlipper *m_pageFlipper;
     QWinRTCursor *m_cursor;
+    QWinRTPageFlipper *m_pageFlipper;
 
     ABI::Windows::Graphics::Display::IDisplayPropertiesStatics *m_displayProperties;
     Qt::ScreenOrientation m_nativeOrientation;
     Qt::ScreenOrientation m_orientation;
+
+    QHash<quint32, Pointer> m_pointers;
+    QHash<quint32, QWindowSystemInterface::TouchPoint> m_touchPoints;
 };
 
 QT_END_NAMESPACE
