@@ -77,6 +77,8 @@ QEventDispatcherWinRT::~QEventDispatcherWinRT()
 
 bool QEventDispatcherWinRT::processEvents(QEventLoop::ProcessEventsFlags flags)
 {
+    Q_UNUSED(flags);
+
     // we are awake, broadcast it
     emit awake();
     QCoreApplicationPrivate::sendPostedEvents(0, 0, QThreadData::current());
@@ -498,6 +500,8 @@ void QEventDispatcherWinRTPrivate::doWsaEventSelect(int socket)
     if (sn_except.contains(socket))
         sn_event |= FD_OOB;
     WSAEventSelect(socket, WSACreateEvent(), sn_event);
+#else
+    Q_UNUSED(socket);
 #endif
 }
 
