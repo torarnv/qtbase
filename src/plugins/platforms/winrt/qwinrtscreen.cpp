@@ -57,13 +57,16 @@
 #include <windows.ui.h>
 #include <windows.ui.core.h>
 #include <windows.ui.input.h>
+#include <windows.graphics.display.h>
 
 using namespace Microsoft::WRL;
+using namespace Microsoft::WRL::Wrappers;
 using namespace ABI::Windows::Foundation;
 using namespace ABI::Windows::System;
 using namespace ABI::Windows::UI::Core;
 using namespace ABI::Windows::UI::Input;
 using namespace ABI::Windows::Devices::Input;
+using namespace ABI::Windows::Graphics::Display;
 
 typedef ITypedEventHandler<CoreWindow*, WindowActivatedEventArgs*> ActivatedHandler;
 typedef ITypedEventHandler<CoreWindow*, CoreWindowEventArgs*> ClosedHandler;
@@ -74,6 +77,23 @@ typedef ITypedEventHandler<CoreWindow*, PointerEventArgs*> PointerHandler;
 typedef ITypedEventHandler<CoreWindow*, WindowSizeChangedEventArgs*> SizeChangedHandler;
 typedef ITypedEventHandler<CoreWindow*, VisibilityChangedEventArgs*> VisibilityChangedHandler;
 typedef ITypedEventHandler<CoreWindow*, AutomationProviderRequestedEventArgs*> AutomationProviderRequestedHandler;
+
+static inline Qt::ScreenOrientation qOrientationFromNative(DisplayOrientations orientation)
+{
+    switch (orientation) {
+    default:
+    case DisplayOrientations_None:
+        return Qt::PrimaryOrientation;
+    case DisplayOrientations_Landscape:
+        return Qt::LandscapeOrientation;
+    case DisplayOrientations_LandscapeFlipped:
+        return Qt::InvertedLandscapeOrientation;
+    case DisplayOrientations_Portrait:
+        return Qt::PortraitOrientation;
+    case DisplayOrientations_PortraitFlipped:
+        return Qt::InvertedPortraitOrientation;
+    }
+}
 
 QWinRTScreen::QWinRTScreen(ICoreWindow *window)
     : m_window(window)
@@ -87,6 +107,7 @@ QWinRTScreen::QWinRTScreen(ICoreWindow *window)
 #endif
     , m_pageFlipper(new QWinRTPageFlipper(window))
     , m_cursor(new QWinRTCursor(window))
+    , m_orientation(Qt::PrimaryOrientation)
 {
     // TODO: query touch device capabilities
     m_touchDevice.setCapabilities(QTouchDevice::Position | QTouchDevice::Area);
@@ -117,6 +138,21 @@ QWinRTScreen::QWinRTScreen(ICoreWindow *window)
     m_window->add_Closed(Callback<ClosedHandler>(this, &QWinRTScreen::onClosed).Get(), &m_tokens[QEvent::WindowDeactivate]);
     m_window->add_VisibilityChanged(Callback<VisibilityChangedHandler>(this, &QWinRTScreen::onVisibilityChanged).Get(), &m_tokens[QEvent::Show]);
     m_window->add_AutomationProviderRequested(Callback<AutomationProviderRequestedHandler>(this, &QWinRTScreen::onAutomationProviderRequested).Get(), &m_tokens[QEvent::InputMethodQuery]);
+
+    // Orientation handling
+    if (SUCCEEDED(GetActivationFactory(HString::MakeReference(RuntimeClass_Windows_Graphics_Display_DisplayProperties).Get(),
+                                       &m_displayProperties))) {
+        // Set native orientation
+        DisplayOrientations displayOrientation;
+        m_displayProperties->get_NativeOrientation(&displayOrientation);
+        m_nativeOrientation = qOrientationFromNative(displayOrientation);
+
+        // Set initial orientation
+        onOrientationChanged(0);
+
+        m_displayProperties->add_OrientationChanged(Callback<IDisplayPropertiesEventHandler>(this, &QWinRTScreen::onOrientationChanged).Get(),
+                                                    &m_tokens[QEvent::OrientationChange]);
+    }
 }
 
 QRect QWinRTScreen::geometry() const
@@ -147,6 +183,16 @@ QPlatformScreenPageFlipper *QWinRTScreen::pageFlipper() const
 QPlatformCursor *QWinRTScreen::cursor() const
 {
     return m_cursor;
+}
+
+Qt::ScreenOrientation QWinRTScreen::nativeOrientation() const
+{
+    return m_nativeOrientation;
+}
+
+Qt::ScreenOrientation QWinRTScreen::orientation() const
+{
+    return m_orientation;
 }
 
 void QWinRTScreen::update(const QRegion &region, const QPoint &offset, const void *handle, int stride)
@@ -295,6 +341,19 @@ HRESULT QWinRTScreen::onVisibilityChanged(ICoreWindow *window, IVisibilityChange
 
     foreach (QWindow *w, qGuiApp->topLevelWindows())
         QWindowSystemInterface::handleWindowStateChanged(w, visible ? Qt::WindowFullScreen : Qt::WindowMinimized);
+    return S_OK;
+}
+
+HRESULT QWinRTScreen::onOrientationChanged(IInspectable *)
+{
+    DisplayOrientations displayOrientation;
+    m_displayProperties->get_CurrentOrientation(&displayOrientation);
+    Qt::ScreenOrientation newOrientation = qOrientationFromNative(displayOrientation);
+    if (m_orientation != newOrientation) {
+        m_orientation = newOrientation;
+        QWindowSystemInterface::handleScreenOrientationChange(screen(), m_orientation);
+    }
+
     return S_OK;
 }
 

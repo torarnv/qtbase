@@ -50,21 +50,27 @@
 #include <EventToken.h>
 
 namespace ABI {
-namespace Windows {
-namespace UI {
-namespace Core {
-struct IAutomationProviderRequestedEventArgs;
-struct ICoreWindow;
-struct ICoreWindowEventArgs;
-struct IKeyEventArgs;
-struct IPointerEventArgs;
-struct IVisibilityChangedEventArgs;
-struct IWindowActivatedEventArgs;
-struct IWindowSizeChangedEventArgs;
+    namespace Windows {
+        namespace UI {
+            namespace Core {
+                struct IAutomationProviderRequestedEventArgs;
+                struct ICoreWindow;
+                struct ICoreWindowEventArgs;
+                struct IKeyEventArgs;
+                struct IPointerEventArgs;
+                struct IVisibilityChangedEventArgs;
+                struct IWindowActivatedEventArgs;
+                struct IWindowSizeChangedEventArgs;
+            }
+        }
+        namespace Graphics {
+            namespace Display {
+                struct IDisplayPropertiesStatics;
+            }
+        }
+    }
 }
-}
-}
-}
+struct IInspectable;
 
 QT_BEGIN_NAMESPACE
 
@@ -84,6 +90,9 @@ public:
 
     QPlatformScreenPageFlipper *pageFlipper() const;
     QPlatformCursor *cursor() const;
+
+    Qt::ScreenOrientation nativeOrientation() const;
+    Qt::ScreenOrientation orientation() const;
 
     void update(const QRegion &region, const QPoint &offset, const void *handle, int stride);
 
@@ -110,6 +119,8 @@ private:
     HRESULT onVisibilityChanged(ABI::Windows::UI::Core::ICoreWindow *, ABI::Windows::UI::Core::IVisibilityChangedEventArgs *args);
     HRESULT onAutomationProviderRequested(ABI::Windows::UI::Core::ICoreWindow *, ABI::Windows::UI::Core::IAutomationProviderRequestedEventArgs *args);
 
+    HRESULT onOrientationChanged(IInspectable *);
+
     ABI::Windows::UI::Core::ICoreWindow *m_window;
     QTouchDevice m_touchDevice;
     QRect m_geometry;
@@ -119,6 +130,10 @@ private:
     QWinRTInputContext *m_inputContext;
     QWinRTPageFlipper *m_pageFlipper;
     QWinRTCursor *m_cursor;
+
+    ABI::Windows::Graphics::Display::IDisplayPropertiesStatics *m_displayProperties;
+    Qt::ScreenOrientation m_nativeOrientation;
+    Qt::ScreenOrientation m_orientation;
 };
 
 QT_END_NAMESPACE
