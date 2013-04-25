@@ -46,6 +46,11 @@
 #include <qpa/qwindowsysteminterface.h>
 
 #include <QtCore/QHash>
+#include <QSurfaceFormat>
+
+#ifdef Q_WINRT_GL
+#  include <EGL/egl.h>
+#endif
 
 #include <EventToken.h>
 
@@ -76,6 +81,7 @@ QT_BEGIN_NAMESPACE
 
 class QTouchDevice;
 class QWinRTKeyMapper;
+class QWinRTEGLContext;
 class QWinRTPageFlipper;
 class QWinRTCursor;
 class QWinRTInputContext;
@@ -93,15 +99,22 @@ public:
     QRect geometry() const;
     int depth() const;
     QImage::Format format() const;
+    QSurfaceFormat surfaceFormat() const;
     QWinRTInputContext *inputContext() const;
-
-    QPlatformScreenPageFlipper *pageFlipper() const;
     QPlatformCursor *cursor() const;
 
     Qt::ScreenOrientation nativeOrientation() const;
     Qt::ScreenOrientation orientation() const;
 
+#ifdef Q_WINRT_GL
+    ABI::Windows::UI::Core::ICoreWindow *coreWindow() const;
+    EGLDisplay eglDisplay() const;
+    EGLSurface eglSurface() const;
+#else
+    QPlatformScreenPageFlipper *pageFlipper() const;
+
     void update(const QRegion &region, const QPoint &offset, const void *handle, int stride);
+#endif
 
 private:
     HRESULT handleKeyEvent(ABI::Windows::UI::Core::ICoreWindow *window, ABI::Windows::UI::Core::IKeyEventArgs *args);
@@ -126,6 +139,7 @@ private:
     ABI::Windows::UI::Core::ICoreWindow *m_window;
     QRect m_geometry;
     QImage::Format m_format;
+    QSurfaceFormat m_surfaceFormat;
     int m_depth;
     QWinRTKeyMapper *m_keyMapper;
     QWinRTInputContext *m_inputContext;
@@ -138,6 +152,12 @@ private:
 
     QHash<quint32, Pointer> m_pointers;
     QHash<quint32, QWindowSystemInterface::TouchPoint> m_touchPoints;
+#ifdef Q_WINRT_GL
+    EGLDisplay m_eglDisplay;
+    EGLSurface m_eglSurface;
+#else
+    QWinRTPageFlipper *m_pageFlipper;
+#endif
 };
 
 QT_END_NAMESPACE

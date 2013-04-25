@@ -7,7 +7,6 @@ load(qt_plugin)
 
 QT += core-private gui-private platformsupport-private
 
-LIBS += -ld3d11
 DEFINES += __WRL_NO_DEFAULT_LIB__
 
 winrt:QMAKE_CXXFLAGS += -ZW -EHsc
@@ -20,7 +19,6 @@ SOURCES = \
     qwinrtinputcontext.cpp \
     qwinrtintegration.cpp \
     qwinrtkeymapper.cpp \
-    qwinrtpageflipper.cpp \
     qwinrtscreen.cpp \
     qwinrtservices.cpp \
     qwinrtwindow.cpp
@@ -32,10 +30,19 @@ HEADERS = \
     qwinrtinputcontext.h \
     qwinrtintegration.h \
     qwinrtkeymapper.h \
-    qwinrtpageflipper.h \
     qwinrtscreen.h \
     qwinrtservices.h \
     qwinrtwindow.h
+
+contains(QT_CONFIG, opengles2) {
+    DEFINES += Q_WINRT_GL
+    SOURCES += qwinrteglcontext.cpp
+    HEADERS += qwinrteglcontext.h
+} else {
+    SOURCES += qwinrtpageflipper.cpp
+    HEADERS += qwinrtpageflipper.h
+    LIBS += -ld3d11
+}
 
 OTHER_FILES += winrt.json
 

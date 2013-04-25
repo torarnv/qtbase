@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include "qwinrtwindow.h"
+#include "qwinrtscreen.h"
 
 #include <qpa/qwindowsysteminterface.h>
 #include <qpa/qplatformscreen.h>
@@ -70,15 +71,7 @@ void QWinRTWindow::setGeometry(const QRect &rect)
 
 QSurfaceFormat QWinRTWindow::format() const
 {
-    static QSurfaceFormat fmt;
-
-    if (!fmt.alphaBufferSize()) {
-        fmt.setAlphaBufferSize(8);
-        fmt.setRedBufferSize(8);
-        fmt.setGreenBufferSize(8);
-        fmt.setBlueBufferSize(8);
-    }
-    return fmt;
+    return static_cast<QWinRTScreen*>(screen())->surfaceFormat();
 }
 
 void QWinRTWindow::setWindowState(Qt::WindowState state)
