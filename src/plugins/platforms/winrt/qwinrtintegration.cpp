@@ -45,6 +45,7 @@
 #include "qwinrtbackingstore.h"
 #include "qwinrtscreen.h"
 #include "qwinrtinputcontext.h"
+#include "qwinrtservices.h"
 
 #include <QtPlatformSupport/private/qbasicfontdatabase_p.h>
 
@@ -87,6 +88,8 @@ QWinRTIntegration::QWinRTIntegration()
     m_eventDispatcher = new QWinRTEventDispatcher(dispatcher);
 
     m_fontDatabase = new QBasicFontDatabase();
+
+    m_services = new QWinRTServices();
 }
 
 QWinRTIntegration::~QWinRTIntegration()
@@ -129,6 +132,11 @@ QPlatformFontDatabase *QWinRTIntegration::fontDatabase() const
 QPlatformInputContext *QWinRTIntegration::inputContext() const
 {
     return m_screen->inputContext();
+}
+
+QPlatformServices *QWinRTIntegration::services() const
+{
+    return m_services;
 }
 
 QT_END_NAMESPACE

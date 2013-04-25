@@ -39,38 +39,38 @@
 **
 ****************************************************************************/
 
-#ifndef QWINRTINTEGRATION_H
-#define QWINRTINTEGRATION_H
+#ifndef QWINRTSERVICES_H
+#define QWINRTSERVICES_H
 
-#include <qpa/qplatformintegration.h>
+#include <qpa/qplatformservices.h>
 
-QT_BEGIN_NAMESPACE
+namespace ABI {
+    namespace Windows {
+        namespace Foundation {
+            struct IUriRuntimeClassFactory;
+        }
+        namespace Storage {
+            struct IStorageFileStatics;
+        }
+        namespace System {
+            struct ILauncherStatics;
+        }
+    }
+}
 
-class QAbstractEventDispatcher;
-class QWinRTScreen;
-
-class QWinRTIntegration : public QPlatformIntegration
+class QWinRTServices : public QPlatformServices
 {
 public:
-    QWinRTIntegration();
-    ~QWinRTIntegration();
+    QWinRTServices();
+    ~QWinRTServices();
 
-    bool hasCapability(QPlatformIntegration::Capability cap) const;
-
-    QPlatformWindow *createPlatformWindow(QWindow *window) const;
-    QPlatformBackingStore *createPlatformBackingStore(QWindow *window) const;
-    QAbstractEventDispatcher *guiThreadEventDispatcher() const;
-    QPlatformFontDatabase *fontDatabase() const;
-    QPlatformInputContext *inputContext() const;
-    QPlatformServices *services() const;
+    bool openUrl(const QUrl &url);
+    bool openDocument(const QUrl &url);
 
 private:
-    QAbstractEventDispatcher *m_eventDispatcher;
-    QPlatformFontDatabase *m_fontDatabase;
-    QWinRTScreen *m_screen;
-    QPlatformServices *m_services;
+    ABI::Windows::Foundation::IUriRuntimeClassFactory *m_uriFactory;
+    ABI::Windows::Storage::IStorageFileStatics *m_fileFactory;
+    ABI::Windows::System::ILauncherStatics *m_launcher;
 };
 
-QT_END_NAMESPACE
-
-#endif
+#endif // QWINRTSERVICES_H
