@@ -144,7 +144,6 @@ private:
     QWinRTKeyMapper *m_keyMapper;
     QWinRTInputContext *m_inputContext;
     QWinRTCursor *m_cursor;
-    QWinRTPageFlipper *m_pageFlipper;
 
     ABI::Windows::Graphics::Display::IDisplayPropertiesStatics *m_displayProperties;
     Qt::ScreenOrientation m_nativeOrientation;
