@@ -1605,7 +1605,6 @@ void Configure::applySpecSpecifics()
         dictionary[ "STYLE_WINDOWSVISTA" ]  = "no";
         dictionary[ "GIF" ]                 = "qt";
         dictionary[ "JPEG" ]                = "qt";
-        dictionary[ "PNG" ]                 = "qt";
         dictionary[ "LIBJPEG" ]             = "qt";
         dictionary[ "LIBPNG" ]              = "qt";
         dictionary[ "FREETYPE" ]            = "yes";
