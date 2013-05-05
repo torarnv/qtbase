@@ -42,6 +42,7 @@
 #include "qcommandlineparser.h"
 
 #include <qcoreapplication.h>
+#include <qhash.h>
 
 QT_BEGIN_NAMESPACE
 
