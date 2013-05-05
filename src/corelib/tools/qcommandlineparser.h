@@ -42,9 +42,9 @@
 #ifndef QCOMMANDLINEPARSER_H
 #define QCOMMANDLINEPARSER_H
 
-#include "qstringlist.h"
+#include <QtCore/qstringlist.h>
 
-#include "qcommandlineoption.h"
+#include <QtCore/qcommandlineoption.h>
 
 QT_BEGIN_HEADER
 

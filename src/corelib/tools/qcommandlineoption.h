@@ -42,7 +42,7 @@
 #ifndef QCOMMANDLINEOPTION_H
 #define QCOMMANDLINEOPTION_H
 
-#include "qstringlist.h"
+#include <QtCore/qstringlist.h>
 
 QT_BEGIN_HEADER
 
