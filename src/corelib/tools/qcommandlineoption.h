@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the QtGui module of the Qt Toolkit.
+** This file is part of the QtCore module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -53,7 +53,7 @@ class QCommandLineOptionPrivate;
 
 class Q_CORE_EXPORT QCommandLineOption
 {
-    public:
+public:
     enum OptionType {
         NoValue,
         OneValue,
@@ -61,17 +61,17 @@ class Q_CORE_EXPORT QCommandLineOption
     };
 
     QCommandLineOption();
-    explicit QCommandLineOption(const QStringList& names, const QString& description = QString(),
+    explicit QCommandLineOption(const QStringList &names, const QString &description = QString(),
                                 OptionType optionType = NoValue, bool required = false,
-                                const QStringList& defaultValues = QStringList());
-    QCommandLineOption(const QCommandLineOption& other);
-    QCommandLineOption& operator=(const QCommandLineOption& other);
+                                const QStringList &defaultValues = QStringList());
+    QCommandLineOption(const QCommandLineOption &other);
+    QCommandLineOption &operator=(const QCommandLineOption &other);
 
     ~QCommandLineOption();
 
     bool operator==(const QCommandLineOption &other) const;
 
-    void setNames(const QStringList& names);
+    void setNames(const QStringList &names);
     QStringList names() const;
 
     void setOptionType(OptionType optionType);
@@ -80,14 +80,14 @@ class Q_CORE_EXPORT QCommandLineOption
     void setRequired(bool required);
     bool required() const;
 
-    void setDescription(const QString& description);
+    void setDescription(const QString &description);
     QString description() const;
 
-    void setDefaultValues(const QStringList& defaultValues);
+    void setDefaultValues(const QStringList &defaultValues);
     QStringList defaultValues() const;
 
-    private:
-        QCommandLineOptionPrivate* d;
+private:
+    QCommandLineOptionPrivate* d;
 };
 
 QT_END_NAMESPACE

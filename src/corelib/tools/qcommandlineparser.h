@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the QtGui module of the Qt Toolkit.
+** This file is part of the QtCore module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -55,13 +55,13 @@ class QCommandLineParserPrivate;
 class QCommandLineParser
 {
 public:
-    bool addOption(const QCommandLineOption& commandLineOption);
+    bool addOption(const QCommandLineOption &commandLineOption);
 
     bool setHelpOption(bool isHelpOption);
 
-    QString argument( const QString & name ) const;
+    QString argument(const QString &name) const;
 
-    QStringList arguments(const QString& name) const;
+    QStringList arguments(const QString &name) const;
 
     QStringList remainingArguments() const;
 
@@ -79,7 +79,7 @@ private:
     ~QCommandLineParser();
 
     bool parse();
-    bool parse(const QStringList & arguments);
+    bool parse(const QStringList &arguments);
 
     QCommandLineParserPrivate* const d;
 };

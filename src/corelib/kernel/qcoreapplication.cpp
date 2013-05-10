@@ -500,7 +500,7 @@ void QCoreApplicationPrivate::initLocale()
     For more advanced command line option handling, the QCommandLineParser
     singleton can be invoked after accessing the instance with the
     commandLineParser() method. The QCoreApplication object takes care of the
-    construction and deconstruction of the command line parser object.
+    construction and destruction of the command line parser object.
 
     \section1 Locale Settings
 

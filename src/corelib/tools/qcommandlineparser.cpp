@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the QtGui module of the Qt Toolkit.
+** This file is part of the QtCore module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -201,16 +201,16 @@ QCommandLineParser::~QCommandLineParser()
     there is a name attached that clashes with an option name added before.
     There is also currently a maximum limit of 65535 options. Subsequent
     additions fails.
-    
+
     Adding the option may also fail if memory cannot be allocated.
  */
-bool QCommandLineParser::addOption(const QCommandLineOption& option)
+bool QCommandLineParser::addOption(const QCommandLineOption &option)
 {
     QStringList optionNames = option.names();
 
     if (d->commandLineOptionList.size() < d->maxOptionCount && !optionNames.isEmpty()) {
 
-        foreach (const QString& name, optionNames)
+        foreach (const QString &name, optionNames)
         {
             if (d->nameHash.contains(name))
             {
@@ -222,7 +222,7 @@ bool QCommandLineParser::addOption(const QCommandLineOption& option)
 
         const quint16 offset = (quint16)(d->commandLineOptionList.size() - 1);
 
-        foreach (const QString& name, optionNames)
+        foreach (const QString &name, optionNames)
         {
             d->nameHash.insert(name, offset);
         }
@@ -293,7 +293,7 @@ bool QCommandLineParser::parse()
     if encountered in the form "--foo=value". In this case, the argument
     value will be ignored.
  */
-bool QCommandLineParser::parse(const QStringList & arguments)
+bool QCommandLineParser::parse(const QStringList &arguments)
 {
     QString   argument;
     QString   optionName;
@@ -442,7 +442,7 @@ bool QCommandLineParser::parse(const QStringList & arguments)
     \sa arguments()
  */
 
-QString QCommandLineParser::argument(const QString& optionName) const
+QString QCommandLineParser::argument(const QString &optionName) const
 {
     QStringList argumentList = arguments(optionName);
 
@@ -474,7 +474,7 @@ QString QCommandLineParser::argument(const QString& optionName) const
     \sa argument()
  */
 
-QStringList QCommandLineParser::arguments(const QString& optionName) const
+QStringList QCommandLineParser::arguments(const QString &optionName) const
 {
     if (d->nameHash.contains(optionName))
     {

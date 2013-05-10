@@ -4,7 +4,7 @@
 ** All rights reserved.
 ** Contact: Nokia Corporation (qt-info@nokia.com)
 **
-** This file is part of the QtGui module of the Qt Toolkit.
+** This file is part of the QtCore module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** GNU Lesser General Public License Usage
@@ -69,7 +69,7 @@ public:
 };
 
 /*!
-    \since 5.1
+    \since 5.2
     \class QCommandLineOption
     \brief The QCommandLineOption class provides a means for command line option
 
@@ -115,9 +115,9 @@ QCommandLineOption::QCommandLineOption()
 /*!
     Constructs a command line option object with the given arguments.
 */
-QCommandLineOption::QCommandLineOption(const QStringList& names, const QString& description,
-                                        OptionType optionType, bool required,
-                                        const QStringList& defaultValues)
+QCommandLineOption::QCommandLineOption(const QStringList &names, const QString &description,
+                                       OptionType optionType, bool required,
+                                       const QStringList &defaultValues)
     : d(new QCommandLineOptionPrivate)
 {
     setRequired(required);
@@ -173,10 +173,9 @@ QStringList QCommandLineOption::names() const
 
     \sa names()
  */
-void QCommandLineOption::setNames(const QStringList& names)
+void QCommandLineOption::setNames(const QStringList &names)
 {
-    foreach (const QString& name, names)
-    {
+    foreach (const QString &name, names) {
         if (!name.isEmpty() && !name.startsWith('-') && !name.startsWith('?')) {
             d->nameSet.append(name);
         }
@@ -253,7 +252,7 @@ bool QCommandLineOption::required() const
 
     \sa description()
  */
-void QCommandLineOption::setDescription(const QString& description)
+void QCommandLineOption::setDescription(const QString &description)
 {
     d->description = description;
 }
@@ -276,7 +275,7 @@ QString QCommandLineOption::description() const
 
    \sa defaultValues()
  */
-void QCommandLineOption::setDefaultValues(const QStringList& defaultValues)
+void QCommandLineOption::setDefaultValues(const QStringList &defaultValues)
 {
     d->defaultValues = defaultValues;
 }
