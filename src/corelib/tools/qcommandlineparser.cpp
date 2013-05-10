@@ -210,10 +210,8 @@ bool QCommandLineParser::addOption(const QCommandLineOption &option)
 
     if (d->commandLineOptionList.size() < d->maxOptionCount && !optionNames.isEmpty()) {
 
-        foreach (const QString &name, optionNames)
-        {
-            if (d->nameHash.contains(name))
-            {
+        foreach (const QString &name, optionNames) {
+            if (d->nameHash.contains(name)) {
                 return false;
             }
         }
@@ -222,8 +220,7 @@ bool QCommandLineParser::addOption(const QCommandLineOption &option)
 
         const quint16 offset = (quint16)(d->commandLineOptionList.size() - 1);
 
-        foreach (const QString &name, optionNames)
-        {
+        foreach (const QString &name, optionNames) {
             d->nameHash.insert(name, offset);
         }
 
@@ -254,18 +251,13 @@ bool QCommandLineParser::setHelpOption(bool isHelpOption)
 bool QCommandLineParser::parse()
 {
     QCoreApplication *pApp = QCoreApplication::instance();
-
-    if ( NULL != pApp )
-    {
+    if (pApp) {
         QStringList args = pApp->arguments();
-
-        if ( ! args.isEmpty() )
-        {
+        if (!args.isEmpty()) {
             args.removeFirst();
-            return parse( args );
+            return parse(args);
         }
     }
-
     return false;
 
 }
@@ -311,110 +303,72 @@ bool QCommandLineParser::parse(const QStringList &arguments)
     d->optionNames.clear();
     d->unknownOptionNames.clear();
 
-    for (QStringList::const_iterator argumentIterator = arguments.begin(); argumentIterator != arguments.end() ; ++argumentIterator)
-    {
+    for (QStringList::const_iterator argumentIterator = arguments.begin(); argumentIterator != arguments.end() ; ++argumentIterator) {
         QString argument = *argumentIterator;
 
-        if (argument.startsWith(doubleDashString))
-        {
-            if (argument.length() > 2)
-            {
+        if (argument.startsWith(doubleDashString)) {
+            if (argument.length() > 2) {
                 optionName = argument.mid(2).section(assignChar, 0, 1);
 
-                if (d->nameHash.contains(optionName))
-                {
+                if (d->nameHash.contains(optionName)) {
                     d->optionNames.append(optionName);
                     optionOffset = *d->nameHash.find(optionName);
                     type = d->commandLineOptionList.at(optionOffset).optionType();
 
-                    if (type == QCommandLineOption::OneValue || type == QCommandLineOption::MultipleValues)
-                    {
-                        if (!argument.contains(assignChar))
-                        {
+                    if (type == QCommandLineOption::OneValue || type == QCommandLineOption::MultipleValues) {
+                        if (!argument.contains(assignChar)) {
                             ++argumentIterator;
 
-                            if (argumentIterator != arguments.end())
-                            {
+                            if (argumentIterator != arguments.end()) {
                                 d->optionArgumentListHash[optionOffset].append(*argumentIterator);
                             }
-                        }
-
-                        else
-                        {
+                        } else {
                             d->optionArgumentListHash[optionOffset].append(argument.section(assignChar, 1));
                         }
                     }
-                }
-
-                else
-                {
+                } else {
                     d->unknownOptionNames.append(optionName);
                 }
-
             }
-
-            else
-            {
-                if (d->parseAfterDoubleDash == true)
-                {
+            else {
+                if (d->parseAfterDoubleDash == true) {
                     d->remainingArgumentList.append(argument);
-                }
-                else
-                {
+                } else {
                     break;
                 }
             }
         }
 
-#ifdef Q_OS_WIN32
-        else if (argument.startsWith(slashChar) || argument.startsWith(dashChar))
-#else
-        else if (argument.startsWith(dashChar))
+        else if (
+#ifdef Q_OS_WIN
+                argument.startsWith(slashChar) ||
 #endif
-        {
+                argument.startsWith(dashChar)) {
             QString optionName = argument.mid(1);
-
-            if (!optionName.isEmpty())
-            {
-                if (d->nameHash.contains(optionName))
-                {
+            if (!optionName.isEmpty()) {
+                if (d->nameHash.contains(optionName)) {
                     d->optionNames.append(optionName);
                     optionOffset = *d->nameHash.find(optionName);
                     type = d->commandLineOptionList.at(optionOffset).optionType();
 
-                    if (type == QCommandLineOption::OneValue || type == QCommandLineOption::MultipleValues)
-                    {
-                        if (!argument.contains(assignChar))
-                        {
+                    if (type == QCommandLineOption::OneValue || type == QCommandLineOption::MultipleValues) {
+                        if (!argument.contains(assignChar)) {
                             ++argumentIterator;
 
-                            if (argumentIterator != arguments.end())
-                            {
+                            if (argumentIterator != arguments.end()) {
                                 d->optionArgumentListHash[optionOffset].append(*argumentIterator);
                             }
-                        }
-
-                        else
-                        {
+                        } else {
                             d->optionArgumentListHash[optionOffset].append(argument.section(assignChar, 1));
                         }
                     }
-                }
-
-                else
-                {
+                } else {
                     d->unknownOptionNames.append(optionName);
                 }
-            }
-
-            else
-            {
+            } else {
                 d->remainingArgumentList.append(argument);
             }
-        }
-
-        else
-        {
+        } else {
             d->remainingArgumentList.append(argument);
         }
 
@@ -422,9 +376,7 @@ bool QCommandLineParser::parse(const QStringList &arguments)
     }
 
     return false;
-
 }
-
 
 /*!
     Return the option value found for the given option name \a optionName, or
@@ -446,15 +398,12 @@ QString QCommandLineParser::argument(const QString &optionName) const
 {
     QStringList argumentList = arguments(optionName);
 
-    if (!argumentList.isEmpty())
-    {
+    if (!argumentList.isEmpty()) {
         return argumentList.last();
     }
 
     return QString();
-
 }
-
 
 /*!
     Return a list of option values found for the given option name \a
@@ -476,16 +425,13 @@ QString QCommandLineParser::argument(const QString &optionName) const
 
 QStringList QCommandLineParser::arguments(const QString &optionName) const
 {
-    if (d->nameHash.contains(optionName))
-    {
+    if (d->nameHash.contains(optionName)) {
         const NameHash_t::mapped_type optionOffset = *d->nameHash.find(optionName);
-
         return d->optionArgumentListHash[optionOffset];
     }
 
     return QStringList();
 }
-
 
 /*!
     Return a list of remaining arguments.
