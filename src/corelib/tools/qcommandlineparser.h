@@ -52,7 +52,7 @@ QT_BEGIN_NAMESPACE
 
 class QCommandLineParserPrivate;
 
-class QCommandLineParser
+class Q_CORE_EXPORT QCommandLineParser
 {
 public:
     bool addOption(const QCommandLineOption &commandLineOption);
