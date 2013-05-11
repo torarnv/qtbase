@@ -187,6 +187,7 @@ QCommandLineParser::QCommandLineParser()
 */
 QCommandLineParser::~QCommandLineParser()
 {
+    delete d;
 }
 
 /*!

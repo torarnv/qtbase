@@ -43,6 +43,7 @@
 #define QCOMMANDLINEOPTION_H
 
 #include <QtCore/qstringlist.h>
+#include <QtCore/qshareddata.h>
 
 QT_BEGIN_HEADER
 
@@ -87,7 +88,7 @@ public:
     QStringList defaultValues() const;
 
 private:
-    QCommandLineOptionPrivate* d;
+    QSharedDataPointer<QCommandLineOptionPrivate> d;
 };
 
 QT_END_NAMESPACE

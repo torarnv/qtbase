@@ -45,7 +45,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QCommandLineOptionPrivate
+class QCommandLineOptionPrivate : public QSharedData
 {
 public:
     inline QCommandLineOptionPrivate()
@@ -137,7 +137,6 @@ QCommandLineOption::QCommandLineOption(const QCommandLineOption &other):
 */
 QCommandLineOption::~QCommandLineOption()
 {
-    delete d;
 }
 
 QCommandLineOption&
