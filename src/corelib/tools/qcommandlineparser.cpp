@@ -101,7 +101,7 @@ public:
     can subsequently return the option value(s) found, or a list of values
     without assigned option names (i.e. remaining values).
 
-    Options on the command line are recognised as starting with a single or
+    Options on the command line are recognized as starting with a single or
     double dash character(s). The option "-" (single dash) is a special case,
     and not treated as an option. By default, the parser will stop parsing once
     the option "--" (double dash) is encountered, although this behaviour can be
@@ -272,13 +272,13 @@ bool QCommandLineParser::parse()
     further options once it encounters the option "--"; this does not
     include when "--" follows an option that requires an argument.
 
-    Options that were successfully recognised, and their arguments, are
+    Options that were successfully recognized, and their arguments, are
     removed from the input list. If \c m_bRemoveUnknownLongNames is
-    \c true, unrecognised options are removed and placed into a list of
+    \c true, unrecognized options are removed and placed into a list of
     unknown option names. Anything left over is placed into a list of
     leftover arguments.
 
-    A long option that does not take an argument will still be recognised
+    A long option that does not take an argument will still be recognized
     if encountered in the form "--foo=value". In this case, the argument
     value will be ignored.
  */
@@ -381,7 +381,7 @@ bool QCommandLineParser::parse(const QStringList &arguments)
 
     The name provided can be any long or short name of any option that was
     added with \c addOption(). All the option names are treated as being
-    equivalent. If the name is not recognised or that option was not present, a
+    equivalent. If the name is not recognized or that option was not present, a
     null string is returned.
 
     For options found by the parser, an empty string is returned if the
@@ -408,7 +408,7 @@ QString QCommandLineParser::argument(const QString &optionName) const
 
     The name provided can be any long or short name of any option that was
     added with \c addOption(). All the options names are treated as being
-    equivalent. If the name is not recognised or that option was not present, a
+    equivalent. If the name is not recognized or that option was not present, a
     null string is returned.
 
     For options found by the parser, the list will contain an entry for
@@ -433,7 +433,7 @@ QStringList QCommandLineParser::arguments(const QString &optionName) const
 /*!
     Return a list of remaining arguments.
 
-    These are all of the arguments that were not recognised as part of an
+    These are all of the arguments that were not recognized as part of an
     option.
  */
 
@@ -445,7 +445,7 @@ QStringList QCommandLineParser::remainingArguments() const
 /*!
     Return a list of option names that were found.
 
-    This returns a list of all the recognised option names found by the
+    This returns a list of all the recognized option names found by the
     parser, in the order in which they were found. For any long options
     that were in the form "--foo=value", the value part will have been
     dropped.
@@ -467,7 +467,7 @@ QStringList QCommandLineParser::optionNames() const
     Return a list of unknown option names.
 
     This list will include both long an short name options that were not
-    recognised. For any long options that were in the form "--foo=value",
+    recognized. For any long options that were in the form "--foo=value",
     the value part will have been dropped and only the long name is added.
 
     The names in this list do not include the preceding dash characters.
