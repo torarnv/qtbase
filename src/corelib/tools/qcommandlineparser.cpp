@@ -58,9 +58,6 @@ public:
     //! The command line options used for parsing
     QList<QCommandLineOption> commandLineOptionList;
 
-    //! List of arguments found for each option.
-    QList<QStringList> commandLineOptionArgumentList;
-
     // The maximum number of options allowed.
     static const NameHash_t::mapped_type maxOptionCount = ~ 0;
 
