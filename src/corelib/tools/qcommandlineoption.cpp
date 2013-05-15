@@ -176,7 +176,7 @@ QStringList QCommandLineOption::names() const
 void QCommandLineOption::setNames(const QStringList &names)
 {
     foreach (const QString &name, names) {
-        if (!name.isEmpty() && !name.startsWith('-') && !name.startsWith('?')) {
+        if (!name.isEmpty() && !name.startsWith(QLatin1Char('-')) && !name.startsWith(QLatin1Char('?'))) {
             d->nameSet.append(name);
         }
     }
