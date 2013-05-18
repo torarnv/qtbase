@@ -69,11 +69,7 @@ bool QWinRTEventDispatcher::processEvents(QEventLoop::ProcessEventsFlags flags)
     if (m_dispatcher)
         m_dispatcher->ProcessEvents(CoreProcessEventsOption_ProcessAllIfPresent);
 
-    if (QWindowSystemInterface::sendWindowSystemEvents(flags))
-        return true;
+    const bool didProcess = QWindowSystemInterface::sendWindowSystemEvents(flags);
 
-    if (QEventDispatcherWinRT::processEvents(flags & ~QEventLoop::WaitForMoreEvents))
-        return true;
-
-    return false;
+    return QEventDispatcherWinRT::processEvents(flags & ~QEventLoop::WaitForMoreEvents) || didProcess;
 }
