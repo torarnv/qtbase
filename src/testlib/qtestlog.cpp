@@ -474,6 +474,12 @@ void QTestLog::addLogger(LogMode mode, const char *filename)
     }
 
     QTEST_ASSERT(logger);
+    addLogger(logger);
+}
+
+void QTestLog::addLogger(QAbstractTestLogger *logger)
+{
+    QTEST_ASSERT(logger);
     QTest::loggers.append(logger);
 }
 
